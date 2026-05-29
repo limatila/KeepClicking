@@ -1,6 +1,6 @@
 # 006 — Implement Command Validator
 
-Status: `[PLANNED]`
+Status: `[PENDING]`
 
 ## Purpose
 
@@ -8,40 +8,62 @@ Validate parsed commands before execution.
 
 ## Context
 
-Validation prevents unsupported or unsafe operations from reaching PyAutoGUI.
+- Validation prevents unsupported or unsafe operations from reaching PyAutoGUI.
+- Commands must align with the contract in ../instructions/002-command-contract.instruction.md.
 
 ## Scope
 
-Check action, direction, amount, and allowed command set.
+- Check action, direction, and amount fields.
+- Enforce allowed action and direction combinations.
 
 ## Out of scope
 
-No raw text parsing. No PyAutoGUI calls.
+- Raw text parsing.
+- PyAutoGUI calls or execution.
 
 ## Inputs
 
-Command object.
+- Command object from the parser.
 
 ## Outputs
 
-Validated command or validation error.
+- Validation result containing either a validated command or a validation error.
 
 ## Implementation requirements
 
-Reject unknown actions, invalid directions, and negative amounts.
+- Create `src/commands/validator.py` with:
+	- `@dataclass class ValidationError` with fields `reason: str` and `field: str | None`.
+	- `@dataclass class ValidationResult` with fields:
+		- `command: Command | None`
+		- `error: ValidationError | None`
+	- `class CommandValidator` with a short class docstring and method:
+		- `def validate(self, command: Command) -> ValidationResult`
+- Reject unknown actions, invalid directions, and non-positive amounts.
+- Ensure `direction` is only present for `move` and `scroll` actions.
+- Ensure `direction` is `None` for `click`, `double_click`, `right_click`, and `stop`.
+- Validation must be deterministic and side-effect free.
+
+Pseudo-code summary:
+
+```text
+result = validator.validate(command)
+if result.command is None:
+    handle_validation_error(result.error) #placed always in a abstraction
+```
 
 ## Acceptance criteria
 
-Invalid command objects cannot reach execution.
+- Invalid command objects cannot reach execution.
+- Valid commands pass through without modification.
 
 ## Manual validation
 
-Create invalid command objects and confirm rejection.
+- Create invalid command objects and confirm rejection.
 
 ## Dependencies
 
-005 — Implement Command Parser
+- `005-implement-command-parser.md` - path: `.github/specs/005-implement-command-parser.md`
 
-## Next step
+## Reference to Next step
 
-007 — Implement Mouse Controller
+`007-implement-mouse-controller.md` - path: `.github/specs/007-implement-mouse-controller.md`

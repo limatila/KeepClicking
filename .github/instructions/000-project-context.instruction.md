@@ -32,10 +32,15 @@ The speech engine must remain adapter-based so the project can later support:
 
 ## MVP activation model
 
-The MVP should start with push-to-talk or explicit CLI activation.
+The MVP must be speech-first with wake-word activation and offline speech recognition.
 
-Always-on hotword detection is a future feature.
-Always-on background daemon
+Always-on hotword detection with a short listen window after wake word.
+Always-on background daemon is the intended production mode.
+
+CLI usage is for development, debugging, and testing only.
+Production packages must not show a terminal window to the user.
+
+GUI-based configuration is a nice-to-have for the future but is deferred for MVP simplicity.
 
 ## MVP user commands
 

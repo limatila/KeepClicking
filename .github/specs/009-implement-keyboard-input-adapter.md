@@ -1,47 +1,59 @@
 # 009 — Implement Keyboard Input Adapter
 
-Status: `[PLANNED]`
+Status: `[PENDING]`
 
 ## Purpose
 
-Create a temporary input adapter for development without speech recognition.
+Create a dev-only input adapter for debugging and testing without microphone usage.
 
 ## Context
 
-The automation pipeline should be testable before microphone integration.
+- The automation pipeline should be testable without microphone usage during development.
+- MVP activation is wake-word and speech recognition focused.
+- Terminal input is dev-only and must not be used in production packages.
 
 ## Scope
 
-Read text commands from CLI input and send them through the same pipeline.
+- Read text commands from terminal input and send them through the same pipeline.
+- Conform to the speech adapter interface from spec 008.
 
 ## Out of scope
 
-No actual speech recognition.
+- Speech recognition or microphone input.
 
 ## Inputs
 
-Typed text from terminal.
+- Typed text from the terminal.
 
 ## Outputs
 
-Recognized command text.
+- Recognized command text strings.
 
 ## Implementation requirements
 
-Use the same speech engine interface shape if possible.
+- Create `src/speech/keyboard_adapter.py`.
+- Define `class KeyboardInputAdapter` implementing `InputAdapter` with a short class docstring.
+- Constructor:
+	- `def __init__(self, prompt: str)`
+- Method behavior:
+	- `next_text()` uses `input(prompt)` and returns the string.
+	- On `EOFError`, return `None` to signal end-of-stream.
+	- If the user submits an empty string, return `""` and allow the runner to ignore it.
+- `close()` is a no-op.
+- Mark this adapter as dev-only in module docstring and README notes.
 
 ## Acceptance criteria
 
-The full pipeline can run using typed commands.
+- The full pipeline can run using typed commands.
 
 ## Manual validation
 
-Type `click`, `move right`, and `stop` in the terminal.
+- Type "click", "move right", and "stop" in the terminal.
 
 ## Dependencies
 
-008 — Implement Speech Engine Interface
+- `008-implement-speech-engine-interface.md` - path: `.github/specs/008-implement-speech-engine-interface.md`
 
-## Next step
+## Reference to Next step
 
-010 — Implement Offline Speech Adapter
+`016-manual-mvp-validation.md` - path: `.github/specs/016-manual-mvp-validation.md`

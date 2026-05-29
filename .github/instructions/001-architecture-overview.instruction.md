@@ -9,13 +9,14 @@ name: "KeepClicking Architecture Overview"
 
 ## Technologies involved
 
-- Python 3.12+
+- Python 3.13+
 │
 ├── SoundDevice
 ├── OpenWakeWord
-├── Faster-Whisper
+├── Vosk (primary offline engine)
+├── Faster-Whisper (optional alternative)
 ├── PyAutoGUI
-├── PySide6
+├── PySide6 (deferred)
 └── Pytest
 
 ## Flow overview
@@ -33,7 +34,13 @@ Wake Word Detection ("Keeper") -> [5s Speech Listening Window]
 Speech-to-Text
     │
     ▼
-Command Parser (Layer for text normalization and translation to internal command objects)
+Text Normalizer
+    │
+    ▼
+Command Parser (Translate normalized text to internal command objects)
+    │
+    ▼
+Command Validator
     │
     ▼
 Action Executor (mouse manager)
@@ -52,44 +59,28 @@ KeepClicking/
 │
 ├── src/
 │   │
-│   ├── main.py
-│   │
+│   ├── __init__.py
+│   ├── cli.py (dev-only harness)
 │   ├── core/
 │   │   ├── config.py
-│   │   ├── constants.py
-│   │   ├── models.py
-│   │   └── state.py
-│   │
+│   │   ├── errors.py
+│   │   └── models.py
 │   ├── audio/
-│   │   ├── microphone.py
-│   │   ├── recorder.py
-│   │   └── silence_detector.py
-│   │
+│   │   └── capture.py
 │   ├── wakeword/
-│   │   ├── detector.py
-│   │   └── keeper_model/
-│   │
+│   │   └── detector.py
 │   ├── speech/
-│   │   ├── transcriber.py
-│   │   ├── language_detector.py
-│   │   └── command_cleaner.py
-│   │
+│   │   ├── interfaces.py
+│   │   └── offline_adapter.py
 │   ├── commands/
+│   │   ├── normalizer.py
 │   │   ├── parser.py
-│   │   ├── registry.py
-│   │   └── validators.py
-│   │
+│   │   └── validator.py
 │   ├── service/
-│   │   ├── mouse_manager.py
-│   │   ├── background_runner.py
-│   │   ├── executor.py
-│   │   ├── queue.py
-│   │   └── lifecycle.py
-│   │
+│   │   ├── mouse_controller.py
+│   │   └── runner.py
 │   └── utils/
-│       ├── logging.py
-│       ├── timing.py
-│       └── platform.py
+│       └── logging.py
 │
 ├── tests/
 │   ├── test_audio.py
@@ -172,7 +163,8 @@ Executes validated mouse commands through PyAutoGUI.
 
 ### Application Runner
 
-Wires all layers together and exposes a CLI execution path.
+Wires all layers together for the speech-first pipeline.
+CLI is a dev-only harness used for testing and debugging.
 
 ## Architecture rule
 

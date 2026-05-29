@@ -34,11 +34,9 @@ Idle CPU usage must be extremely low and memory usage must remain small.
 
 ## Wake word and activation
 
-Wake word: "Keeper".
-
 Two modes must be supported in architecture planning:
 
-- Mode A: Wake word (continuous listening)
+- Mode A: Wake word (continuous listening) [Wake word: "Keeper". Activation: "Keeper click"] (primary implementation focus for MVP)
 - Mode B: Push-to-talk (secondary implementation, not priority)
 
 Wake-word detection must be offline-capable, inexpensive to run, and suitable for continuous listening.

@@ -1,47 +1,67 @@
 # 004 — Implement Text Normalizer
 
-Status: `[PLANNED]`
+Status: `[PENDING]`
 
 ## Purpose
 
-Normalize recognized speech text before parsing.
+Normalize recognized text before parsing to ensure deterministic command matching.
 
 ## Context
 
-Speech engines may return inconsistent casing, spacing, punctuation, or accents.
+- Speech engines may return inconsistent casing, spacing, punctuation, or accents.
+- Normalization must align with the command phrases in ../instructions/002-command-contract.instruction.md.
 
 ## Scope
 
-Create a normalizer that lowercases, trims whitespace, removes irrelevant punctuation, and maps simple synonyms.
+- Lowercase input, trim whitespace, and collapse repeated spaces.
+- Remove irrelevant punctuation and normalize separators (for example, "double-click" -> "double click").
+- Map simple synonyms (for example, "clique" -> "click") when safe.
 
 ## Out of scope
 
-No command execution. No validation.
+- Command parsing or validation.
+- Language detection beyond simple synonym mapping.
 
 ## Inputs
 
-Raw recognized text.
+- Raw recognized text from a speech or keyboard adapter.
 
 ## Outputs
 
-Normalized text string.
+- Normalized text string.
 
 ## Implementation requirements
 
-Support English command phrases first. Optional Portuguese synonyms may be included.
+- Create `src/commands/normalizer.py`.
+- Implement a pure function:
+	- `def normalize_text(raw_text: str) -> str`
+- Normalization steps (deterministic order):
+	- lowercase
+	- trim leading/trailing whitespace
+	- replace `-`, `_`, and `/` with spaces
+	- remove punctuation except alphanumerics and spaces
+	- collapse repeated whitespace into a single space
+- Maintain a small `SYNONYM_MAP` dict (for example, `{ "clique": "click" }`).
+- Add a short docstring to `normalize_text` describing the intent.
+
+Pseudo-code summary:
+
+```text
+text = normalize_text("  Double-Click ")  # "double click"
+```
 
 ## Acceptance criteria
 
-Common inputs normalize consistently.
+- Common inputs normalize consistently and deterministically.
 
 ## Manual validation
 
-Test examples like ` Click `, `double-click`, `clique`.
+- Test examples like " Click ", "double-click", and "clique".
 
 ## Dependencies
 
-003 — Create Domain Command Model
+- `003-create-domain-command-model.md` - path: `.github/specs/003-create-domain-command-model.md`
 
-## Next step
+## Reference to Next step
 
-005 — Implement Command Parser
+`005-implement-command-parser.md` - path: `.github/specs/005-implement-command-parser.md`
