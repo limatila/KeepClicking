@@ -6,8 +6,6 @@ applyTo: "*"
 
 # 000 — Project Context
 
-Status: `[COMPLETE]`
-
 ## Project name
 
 KeepClicking
@@ -30,14 +28,14 @@ The speech engine must remain adapter-based so the project can later support:
 
 - Vosk
 - Whisper.cpp or faster-whisper
-- Windows speech APIs
-- Optional online speech-to-text providers
+- Online speech-to-text providers
 
 ## MVP activation model
 
 The MVP should start with push-to-talk or explicit CLI activation.
 
 Always-on hotword detection is a future feature.
+Always-on background daemon
 
 ## MVP user commands
 
@@ -54,10 +52,4 @@ Always-on hotword detection is a future feature.
 
 ## Non-goals for MVP
 
-- Cloud synchronization
-- AI agent autonomy
 - Macro scripting
-- Browser extension
-- Remote control
-- Gesture recognition
-- Always-on background daemon

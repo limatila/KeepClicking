@@ -6,8 +6,6 @@ name: "Command Contracts"
 
 # 002 — Command Contract
 
-Status: `[COMPLETE]`
-
 ## Command object
 
 Every parsed command must be represented as a structured object.

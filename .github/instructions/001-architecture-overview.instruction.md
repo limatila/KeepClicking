@@ -7,18 +7,104 @@ name: "KeepClicking Architecture Overview"
 
 # 001 — Architecture Overview
 
-Status: `[COMPLETE]`
+## Technologies involved
 
-## Pipeline
+- Python 3.12+
+│
+├── SoundDevice
+├── OpenWakeWord
+├── Faster-Whisper
+├── PyAutoGUI
+├── PySide6
+└── Pytest
+
+## Flow overview
 
 ```text
-Audio Input
-  -> Speech Engine Adapter
-  -> Text Normalizer
-  -> Command Parser
-  -> Command Validator
-  -> Mouse Controller
-  -> PyAutoGUI
+Microphone
+    │
+    ▼
+Audio Capture
+    │
+    ▼
+Wake Word Detection ("Keeper") -> [5s Speech Listening Window]
+    │
+    ▼
+Speech-to-Text
+    │
+    ▼
+Command Parser (Layer for text normalization and translation to internal command objects)
+    │
+    ▼
+Action Executor (mouse manager)
+    │
+    ▼
+PyAutoGUI
+    │
+    ▼
+Mouse Action Performed
+```
+
+## Folder Organization
+
+```text
+KeepClicking/
+│
+├── src/
+│   │
+│   ├── main.py
+│   │
+│   ├── core/
+│   │   ├── config.py
+│   │   ├── constants.py
+│   │   ├── models.py
+│   │   └── state.py
+│   │
+│   ├── audio/
+│   │   ├── microphone.py
+│   │   ├── recorder.py
+│   │   └── silence_detector.py
+│   │
+│   ├── wakeword/
+│   │   ├── detector.py
+│   │   └── keeper_model/
+│   │
+│   ├── speech/
+│   │   ├── transcriber.py
+│   │   ├── language_detector.py
+│   │   └── command_cleaner.py
+│   │
+│   ├── commands/
+│   │   ├── parser.py
+│   │   ├── registry.py
+│   │   └── validators.py
+│   │
+│   ├── service/
+│   │   ├── mouse_manager.py
+│   │   ├── background_runner.py
+│   │   ├── executor.py
+│   │   ├── queue.py
+│   │   └── lifecycle.py
+│   │
+│   └── utils/
+│       ├── logging.py
+│       ├── timing.py
+│       └── platform.py
+│
+├── tests/
+│   ├── test_audio.py
+│   ├── test_wakeword.py
+│   ├── test_speech.py
+│   └── etc...
+│
+├── scripts/
+│   ├── build.py
+│   ├── package.py
+│   └── release.py
+│
+├── requirements.txt
+├── .python-version
+└── pyproject.toml
 ```
 
 ## Main architectural preferences
@@ -29,7 +115,7 @@ Audio Input
 
 Everything should be scalable and flexible enough for future additions
 
-### Dataclasses Usage
+### Typed Payloads Usage
 
 Dataclasses can be used as: **DTO (Data Transfer Objects)**: To represent structured command objects that flow between layers.
 Strictly type of commands, standard strings, and choice-like data shall be as Enums (Enum, str):
@@ -47,6 +133,15 @@ class CommandActionChoice(BaseChoice):
     STOP = "stop"
 ```
 
+so then, they can be used as a type of attribute in a dataclass:
+
+```python
+@dataclass
+class Command:
+    action: CommandActionChoice
+    amount: int
+    direction: Optional[str] = None
+```
 
 ## Project layers
 
