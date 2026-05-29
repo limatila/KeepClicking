@@ -1,0 +1,17 @@
+[project]
+name = "keepclicking"
+version = "0.1.0"
+description = "Voice-activated mouse control 24/7"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "ctranslate2>=4.7.2",
+    "faker>=40.19.1",
+    "faster-whisper>=1.2.1",
+    "numpy>=2.4.6",
+    "openwakeword>=0.4.0",
+    "pyautogui>=0.9.54",
+    "pyside6>=6.11.1",
+    "pytest>=9.0.3",
+    "sounddevice>=0.5.5",
+]
