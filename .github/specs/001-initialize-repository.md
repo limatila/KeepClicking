@@ -1,6 +1,6 @@
 # 001 — Initialize Repository
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
@@ -48,7 +48,7 @@ Create the initial Python repository layout for KeepClicking.
 	- `src/commands/validator.py`
 	- `src/speech/interfaces.py`
 	- `src/speech/keyboard_adapter.py`
-	- `src/speech/offline_adapter.py`
+	- `src/speech/offline_vosk_adapter.py`
 	- `src/service/mouse_controller.py`
 	- `src/service/runner.py`
 	- `src/utils/logging.py`

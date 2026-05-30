@@ -1,6 +1,6 @@
 # 004 — Implement Text Normalizer
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 

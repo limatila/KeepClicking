@@ -1,6 +1,6 @@
 # 007 — Implement Mouse Controller
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
@@ -34,11 +34,12 @@ Execute validated mouse actions through PyAutoGUI.
 
 - Create `src/service/mouse_controller.py` with:
 	- `@dataclass class ExecutionResult` with fields `stopped: bool` and `error: str | None`.
-	- `class MouseController` with a short class docstring and method:
+	- `class MouseController(Protocol)` with a short class docstring and method:
 		- `def execute(self, command: Command, config: AppConfig) -> ExecutionResult`
+	- `class PyAutoGuiMouseController` implementing `MouseController` with a short class docstring.
 - Only this module may import PyAutoGUI.
 - Set `pyautogui.PAUSE` and `pyautogui.FAILSAFE` using `AppConfig` values during execution.
-- Command-to-call mapping:
+- PyAutoGuiMouseController command-to-call mapping:
 	- `CLICK` -> `pyautogui.click()`
 	- `DOUBLE_CLICK` -> `pyautogui.doubleClick()`
 	- `RIGHT_CLICK` -> `pyautogui.rightClick()`

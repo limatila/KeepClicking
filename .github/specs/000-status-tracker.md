@@ -13,26 +13,26 @@ Statuses to use: `[PENDING]`, `[IN PROGRESS]`, `[COMPLETE]`, `[INCOMPLETE]`
 
 | Step | File | Status |
 | --- | --- | --- |
-| 001 | initialize-repository | `[PENDING]` |
-| 020 | adr-gui-deferred | `[PENDING]` |
-| 002 | define-project-config | `[PENDING]` |
-| 003 | create-domain-command-model | `[PENDING]` |
-| 004 | implement-text-normalizer | `[PENDING]` |
-| 005 | implement-command-parser | `[PENDING]` |
-| 006 | implement-command-validator | `[PENDING]` |
-| 007 | implement-mouse-controller | `[PENDING]` |
-| 008 | implement-speech-engine-interface | `[PENDING]` |
-| 019 | adr-wake-word-engine-selection | `[PENDING]` |
-| 018 | adr-offline-speech-engine-selection | `[PENDING]` |
-| 010 | implement-offline-speech-adapter | `[PENDING]` |
-| 011 | implement-application-runner | `[PENDING]` |
-| 013 | add-logging | `[PENDING]` |
-| 014 | add-error-handling | `[PENDING]` |
-| 009 | implement-keyboard-input-adapter | `[PENDING]` |
-| 016 | manual-mvp-validation | `[PENDING]` |
-| 015 | add-tests | `[PENDING]` |
-| 021 | adr-packaging-toolchain | `[PENDING]` |
-| 017 | MVP-package-local-runner | `[PENDING]` |
+| 001 | initialize-repository | `[COMPLETE]` |
+| 020 | adr-gui-deferred | `[COMPLETE]` |
+| 002 | define-project-config | `[COMPLETE]` |
+| 003 | create-domain-command-model | `[COMPLETE]` |
+| 004 | implement-text-normalizer | `[COMPLETE]` |
+| 005 | implement-command-parser | `[COMPLETE]` |
+| 006 | implement-command-validator | `[COMPLETE]` |
+| 007 | implement-mouse-controller | `[COMPLETE]` |
+| 008 | implement-speech-engine-interface | `[COMPLETE]` |
+| 019 | adr-wake-word-engine-selection | `[COMPLETE]` |
+| 018 | adr-offline-speech-engine-selection | `[COMPLETE]` |
+| 010 | implement-offline-speech-adapter | `[COMPLETE]` |
+| 011 | implement-application-runner | `[COMPLETE]` |
+| 013 | add-logging | `[COMPLETE]` |
+| 014 | add-error-handling | `[COMPLETE]` |
+| 009 | implement-keyboard-input-adapter | `[COMPLETE]` |
+| 016 | manual-mvp-validation | `[COMPLETE]` |
+| 015 | add-tests | `[COMPLETE]` |
+| 021 | adr-packaging-toolchain | `[COMPLETE]` |
+| 017 | MVP-package-local-runner | `[COMPLETE]` |
 
 ## Rule
 

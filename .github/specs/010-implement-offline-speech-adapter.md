@@ -1,6 +1,6 @@
 # 010 — Implement Offline Speech Adapter
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
@@ -35,8 +35,8 @@ Add the first offline speech-to-text adapter.
 ## Implementation requirements
 
 - Follow ADR decision in `018-adr-offline-speech-engine-selection.md`.
-- Create `src/speech/offline_adapter.py`.
-- Define `class OfflineSpeechAdapter` implementing `InputAdapter` with a short class docstring.
+- Create `src/speech/offline_vosk_adapter.py`.
+- Define `class VoskSpeechAdapter` implementing `SpeechAdapter` with a short class docstring.
 - Constructor:
 	- `def __init__(self, config: AppConfig, wake_word_engine: WakeWordEngine)`
 	- Use `config.offline_model_path` if provided.
@@ -45,7 +45,7 @@ Add the first offline speech-to-text adapter.
 	- Capture audio for up to `config.wake_word_listen_seconds`.
 	- Return recognized text or an empty string if no speech is captured.
 	- Return `None` on end-of-stream or unrecoverable adapter failure.
-- Implement the wake-word engine using OpenWakeWord per ADR 019.
+- Implement the wake-word engine using OpenWakeWord per ADR 019 in `src/wakeword/detector.py` as `OpenWakeWordEngine` implementing `WakeWordEngine`.
 - Use `sounddevice` for microphone capture.
 - Add the selected engine dependency (Vosk) to `pyproject.toml` if it is not already present.
 - All optional dependencies must be imported lazily. On missing dependency, raise `OptionalDependencyError` from `core/errors.py` with a clear message.
@@ -54,7 +54,7 @@ Add the first offline speech-to-text adapter.
 Pseudo-code summary:
 
 ```text
-adapter = OfflineSpeechAdapter(config)
+adapter = VoskSpeechAdapter(config)
 text = adapter.next_text()
 ```
 

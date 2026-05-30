@@ -1,6 +1,6 @@
 # 020 - ADR: GUI Deferred for MVP
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 

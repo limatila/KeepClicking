@@ -1,6 +1,6 @@
 # 017 — MVP Package Local Runner
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 

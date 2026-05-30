@@ -1,6 +1,6 @@
 # 011 — Implement Application Runner
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
@@ -38,7 +38,7 @@ Wire the normalizer, parser, validator, speech adapter, and mouse controller tog
 - Support a clean shutdown when a stop command is validated.
 - Create `src/service/runner.py` with:
 	- `class ApplicationRunner` and a short class docstring.
-	- `def __init__(self, adapter: InputAdapter, normalizer: Callable[[str], str], parser: CommandParser, validator: CommandValidator, controller: MouseController, config: AppConfig, logger: logging.Logger)`
+    - `def __init__(self, adapter: SpeechAdapter, normalizer: Callable[[str], str], parser: CommandParser, validator: CommandValidator, controller: MouseController, config: AppConfig, logger: logging.Logger)`
 	- `def run(self) -> None`
 - Loop semantics:
 	- Call `adapter.next_text()`; if `None`, exit the loop.

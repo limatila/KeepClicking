@@ -1,6 +1,6 @@
 # 018 - ADR: Offline Speech Engine Selection
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 

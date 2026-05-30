@@ -1,6 +1,6 @@
 # 005 — Implement Command Parser
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
@@ -37,10 +37,11 @@ Convert normalized text into command objects.
 	- `@dataclass class ParseResult` with fields:
 		- `command: Command | None`
 		- `error: ParseError | None`
-	- `class CommandParser` with a short class docstring and method:
+	- `class CommandParser(Protocol)` with a short class docstring and method:
 		- `def parse(self, text: str, config: AppConfig) -> ParseResult`
+	- `class RuleBasedCommandParser` implementing `CommandParser` with a short class docstring.
 - Deterministic parsing only; no probabilistic matching.
-- Map the normalized phrases:
+- RuleBasedCommandParser must map the normalized phrases:
 	- "click" -> `Command(action=CommandAction.CLICK)`
 	- "double click" -> `Command(action=CommandAction.DOUBLE_CLICK, amount=2)`
 	- "right click" -> `Command(action=CommandAction.RIGHT_CLICK)`

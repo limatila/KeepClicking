@@ -1,6 +1,6 @@
 # 002 — Define Project Config
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
@@ -48,15 +48,14 @@ Define runtime configuration defaults for movement, scrolling, and safety, and e
 	- `wake_word_listen_seconds: float = 5.0`
 	- `keyboard_prompt: str = "keepclicking> "`
 	- `offline_model_path: str | None = None`
-- Provide a factory `def default_config() -> AppConfig` that returns the defaults.
-- Provide `def with_overrides(base: AppConfig, **overrides) -> AppConfig` for tests.
+- Provide `def get_config(base: AppConfig | None = None, **overrides) -> AppConfig` that returns defaults when `base` is `None`, otherwise returns a copy with overrides.
 - Add short class docstrings to `InputMode` and `AppConfig` describing their purpose.
 
 Pseudo-code summary:
 
 ```text
-config = default_config()
-config = with_overrides(config, move_pixels=100)
+config = get_config()
+config = get_config(config, move_pixels=100)
 ```
 
 ## Acceptance criteria

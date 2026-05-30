@@ -1,6 +1,6 @@
 # 006 — Implement Command Validator
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
@@ -36,11 +36,12 @@ Validate parsed commands before execution.
 	- `@dataclass class ValidationResult` with fields:
 		- `command: Command | None`
 		- `error: ValidationError | None`
-	- `class CommandValidator` with a short class docstring and method:
+	- `class CommandValidator(Protocol)` with a short class docstring and method:
 		- `def validate(self, command: Command) -> ValidationResult`
-- Reject unknown actions, invalid directions, and non-positive amounts.
-- Ensure `direction` is only present for `move` and `scroll` actions.
-- Ensure `direction` is `None` for `click`, `double_click`, `right_click`, and `stop`.
+	- `class RuleBasedCommandValidator` implementing `CommandValidator` with a short class docstring.
+- RuleBasedCommandValidator must reject unknown actions, invalid directions, and non-positive amounts.
+- RuleBasedCommandValidator must ensure `direction` is only present for `move` and `scroll` actions.
+- RuleBasedCommandValidator must ensure `direction` is `None` for `click`, `double_click`, `right_click`, and `stop`.
 - Validation must be deterministic and side-effect free.
 
 Pseudo-code summary:

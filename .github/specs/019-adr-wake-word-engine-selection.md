@@ -1,6 +1,6 @@
 # 019 - ADR: Wake Word Engine Selection
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 

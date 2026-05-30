@@ -1,6 +1,6 @@
 # 015 — Add Tests
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
@@ -43,7 +43,7 @@ Add automated tests for deterministic layers.
 	- `tests/test_mouse_controller.py`
 	- `tests/test_runner.py`
 - Mock `pyautogui` calls using `unittest.mock` to ensure no real mouse movement.
-- Provide a fake `InputAdapter` for runner tests.
+- Provide a fake `SpeechAdapter` for runner tests.
 
 Pseudo-code summary:
 

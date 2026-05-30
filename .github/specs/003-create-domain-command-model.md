@@ -1,6 +1,6 @@
 # 003 — Create Domain Command Model
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 

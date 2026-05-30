@@ -1,6 +1,6 @@
 # 009 — Implement Keyboard Input Adapter
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
@@ -32,7 +32,7 @@ Create a dev-only input adapter for debugging and testing without microphone usa
 ## Implementation requirements
 
 - Create `src/speech/keyboard_adapter.py`.
-- Define `class KeyboardInputAdapter` implementing `InputAdapter` with a short class docstring.
+- Define `class KeyboardSpeechAdapter` implementing `SpeechAdapter` with a short class docstring.
 - Constructor:
 	- `def __init__(self, prompt: str)`
 - Method behavior:

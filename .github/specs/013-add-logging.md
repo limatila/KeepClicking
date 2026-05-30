@@ -1,6 +1,6 @@
 # 013 — Add Logging
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 

@@ -1,6 +1,6 @@
 # 021 - ADR: Packaging Toolchain Selection
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 

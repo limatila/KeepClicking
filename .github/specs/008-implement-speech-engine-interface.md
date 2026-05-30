@@ -1,10 +1,10 @@
 # 008 — Implement Speech Engine Interface
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
-Define a replaceable interface for input adapters that provide recognized text.
+Define a replaceable interface for speech adapters that provide recognized text.
 
 ## Context
 
@@ -14,7 +14,7 @@ Define a replaceable interface for input adapters that provide recognized text.
 
 ## Scope
 
-- Create a minimal adapter interface that returns recognized text.
+- Create a minimal speech adapter interface that returns recognized text.
 - Define a minimal wake-word engine interface used by speech adapters.
 - Define a simple lifecycle for closing the adapter.
 
@@ -36,7 +36,7 @@ Define a replaceable interface for input adapters that provide recognized text.
 
 - Create `src/speech/interfaces.py`.
 - Define a protocol or abstract base class:
-	- `class InputAdapter(Protocol)` with a short class docstring.
+	- `class SpeechAdapter(Protocol)` with a short class docstring.
 	- `def next_text(self) -> str | None` returning recognized text or `None` on end-of-stream.
 	- `def close(self) -> None` for cleanup (no-op allowed).
 - Define a protocol:
@@ -45,6 +45,7 @@ Define a replaceable interface for input adapters that provide recognized text.
 - Keep the interfaces minimal and provider-agnostic.
 - Avoid leaking engine-specific configuration through the interfaces.
 - Allow a simple mock adapter for tests.
+- Treat `SpeechAdapter` as a base pattern: implementations should be named with their implementation (for example, `VoskSpeechAdapter`, `KeyboardSpeechAdapter`).
 
 Pseudo-code summary:
 
@@ -57,7 +58,7 @@ if wake_word_engine.wait_for_wake_word():
 
 ## Acceptance criteria
 
-- A mock adapter can be implemented with a single method that returns text.
+- A mock speech adapter can be implemented with a single method that returns text.
 
 ## Manual validation
 

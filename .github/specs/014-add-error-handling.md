@@ -1,6 +1,6 @@
 # 014 — Add Error Handling
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 

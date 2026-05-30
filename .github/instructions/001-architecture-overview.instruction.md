@@ -71,7 +71,8 @@ KeepClicking/
 │   │   └── detector.py
 │   ├── speech/
 │   │   ├── interfaces.py
-│   │   └── offline_adapter.py
+│   │   ├── keyboard_adapter.py
+│   │   └── offline_vosk_adapter.py
 │   ├── commands/
 │   │   ├── normalizer.py
 │   │   ├── parser.py
@@ -105,6 +106,22 @@ KeepClicking/
 - **Testability**: Each layer can be unit tested with mock inputs and outputs, without side effects or external dependencies.
 
 Everything should be scalable and flexible enough for future additions
+
+## Naming and base patterns
+
+Use the pattern: "Implementation Goal BasePattern".
+
+- Implementation: technology or strategy (Vosk, OpenWakeWord, PyAutoGUI).
+- Goal: domain capability (Speech, WakeWord, Mouse, Command).
+- BasePattern: reusable interface or abstract role (Adapter, Engine, Parser, Validator, Controller).
+
+Example sentence: "Vosk Speech Adapter" means Vosk is the implementation, Speech is the goal, Adapter is the base pattern.
+
+Rules:
+
+- Base patterns must be defined as Protocols/ABCs or base classes.
+- Concrete implementations must include the implementation in the class name (for example, `VoskSpeechAdapter`, `OpenWakeWordEngine`, `PyAutoGuiMouseController`, `RuleBasedCommandParser`, `RuleBasedCommandValidator`).
+- Higher layers depend on base patterns, not concrete implementations.
 
 ### Typed Payloads Usage
 
