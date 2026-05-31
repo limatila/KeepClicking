@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Protocol
 
 
-class SpeechAdapter(Protocol):
+class SpeechAdapterInterface(Protocol):
 	"""Base interface for speech adapters."""
 
 	def next_text(self) -> str | None:
@@ -15,7 +15,7 @@ class SpeechAdapter(Protocol):
 		"""Release adapter resources."""
 
 
-class WakeWordEngine(Protocol):
+class WakeWordEngineInterface(Protocol):
 	"""Base interface for wake-word engines."""
 
 	def wait_for_wake_word(self) -> bool:

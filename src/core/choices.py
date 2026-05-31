@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from enum import Enum
+
+from src.core.interfaces.choices import BaseChoice
 
 
-class BaseChoice(str, Enum):
-	"""Base class for string enums used across the domain models."""
+class BaseCommandAction(BaseChoice):
+	"""Supported command actions listing, choices per device type."""
+	pass
 
 
-class CommandAction(BaseChoice):
+class MouseCommandAction(BaseCommandAction):
 	"""Supported command actions for the MVP pipeline."""
 
 	CLICK = "click"
@@ -28,12 +29,3 @@ class CommandDirection(BaseChoice):
 	DOWN = "down"
 	LEFT = "left"
 	RIGHT = "right"
-
-
-@dataclass(frozen=True)
-class Command:
-	"""Structured command used across parser, validator, and executor."""
-
-	action: CommandAction
-	amount: int = 1
-	direction: CommandDirection | None = None

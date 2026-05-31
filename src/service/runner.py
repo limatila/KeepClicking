@@ -5,79 +5,81 @@ from __future__ import annotations
 import logging
 from typing import Callable
 
-from src.commands.parser import CommandParser
-from src.commands.validator import CommandValidator
+from src.commands.interfaces import CommandParser, CommandValidator
 from src.core.config import AppConfig
-from src.core.errors import KeepClickingError, OptionalDependencyError
-from src.service.mouse_controller import MouseController
-from src.speech.interfaces import SpeechAdapter
+from src.core.errors import ApplicationError
+from src.service.interfaces import Controller
+from src.speech.interfaces import SpeechAdapterInterface
 
 
-class ApplicationRunner:
+class MouseApplicationRunner:
 	"""Coordinates the speech-to-action pipeline execution loop."""
 
 	def __init__(
 		self,
-		adapter: SpeechAdapter,
+		adapter: SpeechAdapterInterface,
 		normalizer: Callable[[str], str],
 		parser: CommandParser,
 		validator: CommandValidator,
-		controller: MouseController,
+		controller: Controller,
 		config: AppConfig,
 		logger: logging.Logger,
 	) -> None:
-		self._adapter = adapter
-		self._normalizer = normalizer
-		self._parser = parser
-		self._validator = validator
-		self._controller = controller
-		self._config = config
-		self._logger = logger
+		self.adapter = adapter
+		self.normalizer = normalizer
+		self.parser = parser
+		self.validator = validator
+		self.controller = controller
+		self.config = config
+		self.logger = logger
+
+	def listen_and_execute(self) -> None:
+		while True:
+			try:
+				text = self.adapter.next_text()
+				
+				if text is None:
+					self.logger.info("adapter_end")
+					break
+				if text == "":
+					continue
+
+				normalized = self.normalizer(text)
+				self.logger.debug(f"normalized_text: {normalized}")
+
+				parse_result = self.parser.parse(normalized, self.config)
+				if parse_result.command is None:
+					if parse_result.error is not None:
+						self.logger.error(f"parse_error: {parse_result.error.reason}")
+					continue
+
+				validation = self.validator.validate(parse_result.command)
+				if validation.command is None:
+					if validation.error is not None:
+						self.logger.error(f"validation_error: {validation.error.reason}")
+					continue
+
+				# MouseClicks
+				execution = self.controller.execute(
+					validation.command, self.config
+				)
+				
+				if execution.error is not None:
+					self.logger.error(f"execution_error: {execution.error}")
+				
+				if execution.stopped:
+					self.logger.info(f"execution_stopped")
+					break
+			
+			except ApplicationError as exc:
+				self.logger.error(f"runtime_error: {exc}")
+				continue
 
 	def run(self) -> None:
 		try:
-			self._logger.info("runner_started")
-			while True:
-				try:
-					text = self._adapter.next_text()
-					if text is None:
-						self._logger.info("adapter_end")
-						break
-					if text == "":
-						continue
-
-					normalized = self._normalizer(text)
-					self._logger.debug("normalized_text: %s", normalized)
-
-					parse_result = self._parser.parse(normalized, self._config)
-					if parse_result.command is None:
-						if parse_result.error is not None:
-							self._logger.warning(
-								"parse_error: %s", parse_result.error.reason
-							)
-						continue
-
-					validation = self._validator.validate(parse_result.command)
-					if validation.command is None:
-						if validation.error is not None:
-							self._logger.warning(
-								"validation_error: %s", validation.error.reason
-							)
-						continue
-
-					execution = self._controller.execute(
-						validation.command, self._config
-					)
-					if execution.error is not None:
-						self._logger.error("execution_error: %s", execution.error)
-					if execution.stopped:
-						self._logger.info("execution_stopped")
-						break
-				except OptionalDependencyError as exc:
-					self._logger.error("dependency_error: %s", exc)
-					break
-				except KeepClickingError as exc:
-					self._logger.error("runtime_error: %s", exc)
-					continue
+			self.logger.info("runner_started")
+			self.listen_and_execute()
+		
 		finally:
-			self._adapter.close()
+			self.adapter.close()
+			self.logger.info("runner_finished")

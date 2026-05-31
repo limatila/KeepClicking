@@ -1,12 +1,13 @@
 import logging
 
-from src.commands.normalizer import normalize_text
-from src.commands.parser import RuleBasedCommandParser
-from src.commands.validator import RuleBasedCommandValidator
 from src.core.config import get_config
-from src.core.models import CommandAction
-from src.service.mouse_controller import ExecutionResult
-from src.service.runner import ApplicationRunner
+from src.core.choices import MouseCommandAction
+
+from src.commands.normalizer import normalize_text
+from src.commands.parser import MouseCommandParser
+from src.commands.validator import MouseCommandValidator
+from src.service.dataclasses import MouseExecutionResult
+from src.service.runner import MouseApplicationRunner
 
 
 class FakeAdapter:
@@ -29,9 +30,9 @@ class FakeController:
 
     def execute(self, command, config):
         self.seen.append(command.action)
-        if command.action == CommandAction.STOP:
-            return ExecutionResult(stopped=True, error=None)
-        return ExecutionResult(stopped=False, error=None)
+        if command.action == MouseCommandAction.STOP:
+            return MouseExecutionResult(stopped=True, error=None)
+        return MouseExecutionResult(stopped=False, error=None)
 
 
 def test_runner_executes_commands():
@@ -40,11 +41,11 @@ def test_runner_executes_commands():
     logger = logging.getLogger("test.runner")
     logger.addHandler(logging.NullHandler())
 
-    runner = ApplicationRunner(
+    runner = MouseApplicationRunner(
         adapter=adapter,
         normalizer=normalize_text,
-        parser=RuleBasedCommandParser(),
-        validator=RuleBasedCommandValidator(),
+        parser=MouseCommandParser(),
+        validator=MouseCommandValidator(),
         controller=controller,
         config=get_config(),
         logger=logger,
@@ -52,5 +53,5 @@ def test_runner_executes_commands():
 
     runner.run()
 
-    assert controller.seen == [CommandAction.CLICK, CommandAction.STOP]
+    assert controller.seen == [MouseCommandAction.CLICK, MouseCommandAction.STOP]
     assert adapter.closed is True

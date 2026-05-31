@@ -14,7 +14,6 @@ Statuses to use: `[PENDING]`, `[IN PROGRESS]`, `[COMPLETE]`, `[INCOMPLETE]`
 | Step | File | Status |
 | --- | --- | --- |
 | 001 | initialize-repository | `[COMPLETE]` |
-| 020 | adr-gui-deferred | `[COMPLETE]` |
 | 002 | define-project-config | `[COMPLETE]` |
 | 003 | create-domain-command-model | `[COMPLETE]` |
 | 004 | implement-text-normalizer | `[COMPLETE]` |
@@ -22,17 +21,18 @@ Statuses to use: `[PENDING]`, `[IN PROGRESS]`, `[COMPLETE]`, `[INCOMPLETE]`
 | 006 | implement-command-validator | `[COMPLETE]` |
 | 007 | implement-mouse-controller | `[COMPLETE]` |
 | 008 | implement-speech-engine-interface | `[COMPLETE]` |
-| 019 | adr-wake-word-engine-selection | `[COMPLETE]` |
-| 018 | adr-offline-speech-engine-selection | `[COMPLETE]` |
+| 009 | implement-keyboard-input-adapter | `[COMPLETE]` |
 | 010 | implement-offline-speech-adapter | `[COMPLETE]` |
 | 011 | implement-application-runner | `[COMPLETE]` |
 | 013 | add-logging | `[COMPLETE]` |
 | 014 | add-error-handling | `[COMPLETE]` |
-| 009 | implement-keyboard-input-adapter | `[COMPLETE]` |
-| 016 | manual-mvp-validation | `[COMPLETE]` |
 | 015 | add-tests | `[COMPLETE]` |
+| 016 | manual-mvp-validation | `[COMPLETE]` |
+| 018 | adr-offline-speech-engine-selection | `[COMPLETE]` |
+| 019 | adr-wake-word-engine-selection | `[COMPLETE]` |
+| 020 | adr-gui-deferred | `[COMPLETE]` |
 | 021 | adr-packaging-toolchain | `[COMPLETE]` |
-| 017 | MVP-package-local-runner | `[COMPLETE]` |
+| MVP | MVP-package-local-runner | `[COMPLETE]` |
 
 ## Rule
 

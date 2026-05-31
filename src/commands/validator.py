@@ -3,75 +3,43 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
-from typing import Protocol
 
-from src.core.models import Command, CommandAction, CommandDirection
+from src.core.choices import MouseCommandAction, CommandDirection
+
+from src.commands.dataclasses import ValidationResult
+from src.commands.interfaces import CommandValidator
+from src.core.errors import ValidationError
 
 LOGGER = logging.getLogger("baseLogger.validator")
 
 
-@dataclass(frozen=True)
-class ValidationError:
-	"""Describes a validation failure for a command."""
-
-	reason: str
-	field: str | None
-
-
-@dataclass(frozen=True)
-class ValidationResult:
-	"""Represents the outcome of a validation attempt."""
-
-	command: Command | None
-	error: ValidationError | None
-
-
-class CommandValidator(Protocol):
-	"""Base interface for command validators."""
-
-	def validate(self, command: Command) -> ValidationResult:
-		"""Validate a command and return a result object."""
-
-
-class RuleBasedCommandValidator:
+class MouseCommandValidator(CommandValidator):
 	"""Deterministic validator for MVP command objects."""
 
-	def validate(self, command: Command) -> ValidationResult:
-		if not isinstance(command.action, CommandAction):
-			LOGGER.debug("validation_failed: invalid_action")
-			return ValidationResult(
-				None,
-				ValidationError(reason="invalid_action", field="action"),
-			)
+	@property
+	def validations_listing(self):
+		return [
+			self.rule_valid_action,
+			self.rule_positive_amount,
+			self.rule_direction_to_move,
+		]
 
-		if command.amount <= 0:
+	def rule_valid_action(self) -> ValidationResult:
+		if not isinstance(self.command.action, MouseCommandAction):
+			# LOGGER.debug("validation_failed: invalid_action at command")
+			raise ValidationError(reason="invalid_action", field="action")
+	
+	def rule_positive_amount(self) -> ValidationResult:
+		if self.command.amount <= 0:
 			LOGGER.debug("validation_failed: non_positive_amount")
-			return ValidationResult(
-				None,
-				ValidationError(reason="non_positive_amount", field="amount"),
-			)
-
-		if command.action in (CommandAction.MOVE, CommandAction.SCROLL):
-			if command.direction is None:
+			raise ValidationError(reason="non_positive_amount", field="amount")
+	
+	def rule_direction_to_move(self) -> ValidationResult:
+		if self.command.action in (MouseCommandAction.MOVE):
+			if self.command.direction is None:
 				LOGGER.debug("validation_failed: missing_direction")
-				return ValidationResult(
-					None,
-					ValidationError(reason="missing_direction", field="direction"),
-				)
-			if not isinstance(command.direction, CommandDirection):
+				raise ValidationError(reason="missing_direction", field="direction")
+			
+			if not isinstance(self.command.direction, CommandDirection):
 				LOGGER.debug("validation_failed: invalid_direction")
-				return ValidationResult(
-					None,
-					ValidationError(reason="invalid_direction", field="direction"),
-				)
-		else:
-			if command.direction is not None:
-				LOGGER.debug("validation_failed: unexpected_direction")
-				return ValidationResult(
-					None,
-					ValidationError(reason="unexpected_direction", field="direction"),
-				)
-
-		LOGGER.debug("validation_ok: %s", command.action)
-		return ValidationResult(command=command, error=None)
+				raise ValidationError(reason="invalid_direction", field="direction")

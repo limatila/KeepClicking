@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.speech.interfaces import SpeechAdapter
+from src.speech.interfaces import SpeechAdapterInterface
 
 
 class KeyboardSpeechAdapter:
