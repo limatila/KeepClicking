@@ -28,10 +28,10 @@ class AppConfig:
     offline_model_path: str | None = None
 
 
-def get_config(base: AppConfig | None = None, **overrides: object) -> AppConfig:
-	"""Return a copy of the config with overrides applied."""
+def get_config(base: AppConfig | None = AppConfig(), **overrides: object) -> AppConfig:
+    """Return a copy of the config with overrides if present."""
 
-	if base is None:
-		return AppConfig()
-
-	return replace(base, **overrides)
+    if overrides:
+        return replace(base, **overrides)
+    else:
+        return base
