@@ -19,7 +19,7 @@ def test_validator_rejects_direction_for_click():
     
     result = validator.validate(command)
     
-    assert result.error is not None #! todo verify if parser cleans direction before validation
+    assert result.error is not None
     assert result.error.field == "direction"
 
 
