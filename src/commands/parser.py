@@ -38,7 +38,7 @@ class MouseCommandParser(CommandParser):
 			return ParseResult(None, self.error)
 
 		#* Parse action direction (if applicable)
-		if self.parsed_mouse_command_choice in [MouseCommandAction.MOVE, MouseCommandAction.SCROLL]:
+		if self.parsed_mouse_command_choice in [MouseCommandAction.MOVE]:
 			for direction_choice_value in CommandDirection.list_choices_values():
 				if direction_choice_value in text:
 					parsed_direction_value = direction_choice_value

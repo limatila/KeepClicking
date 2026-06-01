@@ -21,7 +21,8 @@ class MouseCommandValidator(CommandValidator):
 		return [
 			self.rule_valid_action,
 			self.rule_positive_amount,
-			self.rule_direction_to_move,
+			self.rule_direction_to_move_screen,
+			self.rule_direction_in_moving_action
 		]
 
 	def rule_valid_action(self) -> ValidationResult:
@@ -30,11 +31,11 @@ class MouseCommandValidator(CommandValidator):
 			raise ValidationError(reason="invalid_action", field="action")
 	
 	def rule_positive_amount(self) -> ValidationResult:
-		if self.command.amount <= 0:
+		if self.command.amount < 0:
 			LOGGER.debug("validation_failed: non_positive_amount")
 			raise ValidationError(reason="non_positive_amount", field="amount")
 	
-	def rule_direction_to_move(self) -> ValidationResult:
+	def rule_direction_to_move_screen(self) -> ValidationResult:
 		if self.command.action in (MouseCommandAction.MOVE):
 			if self.command.direction is None:
 				LOGGER.debug("validation_failed: missing_direction")
@@ -43,3 +44,9 @@ class MouseCommandValidator(CommandValidator):
 			if not isinstance(self.command.direction, CommandDirection):
 				LOGGER.debug("validation_failed: invalid_direction")
 				raise ValidationError(reason="invalid_direction", field="direction")
+	
+	def rule_direction_in_moving_action(self) -> ValidationResult:
+		if self.command.action not in (MouseCommandAction.MOVE):
+			if self.command.direction is not None:
+				LOGGER.debug("validation_failed: direction_not_applicable")
+				raise ValidationError(reason="direction_not_applicable", field="direction")
