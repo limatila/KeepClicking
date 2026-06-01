@@ -1,5 +1,4 @@
 from src.commands.parser import MouseCommandParser
-from src.core.config import get_config
 from src.core.choices import MouseCommandAction, CommandDirection
 
 
@@ -30,3 +29,13 @@ def test_parse_unknown():
     
     assert result.command is None
     assert result.error is not None
+
+
+def test_parser_removes_direction_for_non_move_commands():
+    parser = MouseCommandParser()
+    
+    result = parser.parse("click up")
+    
+    assert result.command is not None
+    assert result.command.action == MouseCommandAction.CLICK
+    assert result.command.direction is None
