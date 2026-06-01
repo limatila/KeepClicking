@@ -4,8 +4,8 @@ from src.core.config import InputMode, get_config
 def test_get_config_defaults():
     config = get_config()
     assert config.input_mode == InputMode.SPEECH_OFFLINE
-    assert config.move_pixels == 50
-    assert config.scroll_units == 300
+    assert config.mouse_movement_pixels == 50
+    assert config.mouse_scroll_units == 300
     assert config.pyautogui_pause_seconds == 0.1
     assert config.pyautogui_failsafe is True
     assert config.wake_word_phrase == "keeper"
@@ -16,6 +16,6 @@ def test_get_config_defaults():
 
 def test_get_config_overrides():
     base = get_config()
-    updated = get_config(base, move_pixels=100)
-    assert base.move_pixels == 50
-    assert updated.move_pixels == 100
+    updated = get_config(base, mouse_movement_pixels=100)
+    assert base.mouse_movement_pixels == 50
+    assert updated.mouse_movement_pixels == 100

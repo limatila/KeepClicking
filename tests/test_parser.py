@@ -6,7 +6,7 @@ from src.core.choices import MouseCommandAction, CommandDirection
 def test_parse_click():
     parser = MouseCommandParser()
     
-    result = parser.parse("click", get_config())
+    result = parser.parse("click")
     
     assert result.command is not None
     assert result.command.action == MouseCommandAction.CLICK
@@ -16,7 +16,7 @@ def test_parse_click():
 def test_parse_move_right():
     parser = MouseCommandParser()
     
-    result = parser.parse("move right", get_config())
+    result = parser.parse("move right")
     
     assert result.command is not None
     assert result.command.action == MouseCommandAction.MOVE
@@ -26,7 +26,7 @@ def test_parse_move_right():
 def test_parse_unknown():
     parser = MouseCommandParser()
     
-    result = parser.parse("nonsense", get_config())
+    result = parser.parse("nonsense")
     
     assert result.command is None
     assert result.error is not None

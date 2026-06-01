@@ -45,12 +45,12 @@ Convert normalized text into command objects.
 	- "click" -> `Command(action=CommandAction.CLICK)`
 	- "double click" -> `Command(action=CommandAction.DOUBLE_CLICK, amount=2)`
 	- "right click" -> `Command(action=CommandAction.RIGHT_CLICK)`
-	- "scroll up" -> `Command(action=CommandAction.SCROLL, direction=UP, amount=config.scroll_units)`
-	- "scroll down" -> `Command(action=CommandAction.SCROLL, direction=DOWN, amount=config.scroll_units)`
-	- "move up" -> `Command(action=CommandAction.MOVE, direction=UP, amount=config.move_pixels)`
-	- "move down" -> `Command(action=CommandAction.MOVE, direction=DOWN, amount=config.move_pixels)`
-	- "move left" -> `Command(action=CommandAction.MOVE, direction=LEFT, amount=config.move_pixels)`
-	- "move right" -> `Command(action=CommandAction.MOVE, direction=RIGHT, amount=config.move_pixels)`
+	- "scroll up" -> `Command(action=CommandAction.SCROLL, direction=UP, amount=config.mouse_scroll_units)`
+	- "scroll down" -> `Command(action=CommandAction.SCROLL, direction=DOWN, amount=config.mouse_scroll_units)`
+	- "move up" -> `Command(action=CommandAction.MOVE, direction=UP, amount=config.mouse_movement_pixels)`
+	- "move down" -> `Command(action=CommandAction.MOVE, direction=DOWN, amount=config.mouse_movement_pixels)`
+	- "move left" -> `Command(action=CommandAction.MOVE, direction=LEFT, amount=config.mouse_movement_pixels)`
+	- "move right" -> `Command(action=CommandAction.MOVE, direction=RIGHT, amount=config.mouse_movement_pixels)`
 	- "stop" -> `Command(action=CommandAction.STOP)`
 - Unknown phrases must return `ParseResult(command=None, error=ParseError(...))` and never produce a command.
 

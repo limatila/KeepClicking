@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 
 import pyautogui as pag
 
@@ -29,14 +30,16 @@ class PyAutoGuiMouseController(Controller):
 				pag.rightClick()
 			else:
 				pag.click()
+			time.sleep(0.05)
 
-	def scroll(self, command: MouseCommandAction):
+	def scroll(self, command: MouseCommand):
 		if command.direction == CommandDirection.UP:
 			pag.scroll(command.amount)
 		if command.direction == CommandDirection.DOWN:
 			pag.scroll(-command.amount)
+		# TODO: add horizontal scrolling, x and y args
 
-	def move_cursor(self, command: MouseCommandAction):
+	def move_cursor(self, command: MouseCommand):
 		if command.direction == CommandDirection.UP:
 			pag.moveRel(0, -command.amount)
 		
@@ -54,25 +57,25 @@ class PyAutoGuiMouseController(Controller):
 		pag.FAILSAFE = config.pyautogui_failsafe
 
 		def _dispatch_command(command: MouseCommand):
-			command_dispatcher: dict[MouseCommandAction, callable] = {
-				MouseCommandAction.CLICK: lambda: self.click(),
-				MouseCommandAction.DOUBLE_CLICK: lambda: self.click(times=2),
+			command_executer_dispatcher: dict[MouseCommandAction, callable] = {
+				MouseCommandAction.CLICK: lambda: self.click(times=command.amount),
+				MouseCommandAction.DOUBLE_CLICK: lambda: self.click(times=command.amount),
 				MouseCommandAction.RIGHT_CLICK: lambda: self.click(times=command.amount, right_click=True),
 				MouseCommandAction.SCROLL: lambda: self.scroll(command),
 				MouseCommandAction.MOVE: lambda: self.move_cursor(command)
 			}
 
-			command = command_dispatcher.get(command.action)
+			hardware_executer = command_executer_dispatcher.get(command.action)
 
-			if command:
-				command()
+			if hardware_executer:
+				hardware_executer()
 			
-			return True if command else False
+			return True if hardware_executer else False
 
-		
 		try:
 			if command.action == MouseCommandAction.STOP:
 				self.stopped = True
+				LOGGER.debug("user_stopped_command")
 			
 			else:
 				has_executed = _dispatch_command(command)

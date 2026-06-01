@@ -47,7 +47,7 @@ class MouseApplicationRunner:
 				normalized = self.normalizer(text)
 				self.logger.debug(f"normalized_text: {normalized}")
 
-				parse_result = self.parser.parse(normalized, self.config)
+				parse_result = self.parser.parse(normalized)
 				if parse_result.command is None:
 					if parse_result.error is not None:
 						self.logger.error(f"parse_error: {parse_result.error.reason}")
@@ -72,7 +72,7 @@ class MouseApplicationRunner:
 					break
 			
 			except ApplicationError as exc:
-				self.logger.error(f"runtime_error: {exc}")
+				self.logger.error(f"application_error_in_runtime: {exc}")
 				continue
 
 	def run(self) -> None:

@@ -21,7 +21,7 @@ class OpenWakeWordEngine(WakeWordEngineInterface):
 		threshold: float = 0.5,
 		sample_rate: int = 16000,
 		chunk_seconds: float = 0.5,
-	) -> None:
+	):
 		self.wake_word_phrase = wake_word_phrase
 		self.threshold = threshold
 		self.sample_rate = sample_rate

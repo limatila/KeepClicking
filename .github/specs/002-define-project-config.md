@@ -40,8 +40,8 @@ Define runtime configuration defaults for movement, scrolling, and safety, and e
 	- `KEYBOARD_DEV = "keyboard_dev"`
 - Define `AppConfig` as a dataclass with explicit defaults:
 	- `input_mode: InputMode = InputMode.SPEECH_OFFLINE`
-	- `move_pixels: int = 50`
-	- `scroll_units: int = 300`
+	- `mouse_movement_pixels: int = 50`
+	- `mouse_scroll_units: int = 300`
 	- `pyautogui_pause_seconds: float = 0.1`
 	- `pyautogui_failsafe: bool = True`
 	- `wake_word_phrase: str = "keeper"`
@@ -55,7 +55,7 @@ Pseudo-code summary:
 
 ```text
 config = get_config()
-config = get_config(config, move_pixels=100)
+config = get_config(config, mouse_movement_pixels=100)
 ```
 
 ## Acceptance criteria
