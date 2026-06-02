@@ -31,15 +31,18 @@ class InputMode(str, Enum):
 class AppConfig:
     """Defines runtime configuration defaults for the MVP pipeline."""
 
+    pyautogui_pause_seconds: float = get_env_or_default('pyautogui_pause_seconds', 0.1)
+    pyautogui_failsafe: bool = get_env_or_default('pyautogui_failsafe', True)
+    
     input_mode: InputMode = get_env_or_default('input_mode', InputMode.SPEECH_OFFLINE)
     mouse_movement_pixels: int = get_env_or_default('mouse_movement_pixels', 50)
     mouse_scroll_units: int = get_env_or_default('mouse_scroll_units', 300)
-    pyautogui_pause_seconds: float = get_env_or_default('pyautogui_pause_seconds', 0.1)
-    pyautogui_failsafe: bool = get_env_or_default('pyautogui_failsafe', True)
+    
+    keyboard_prompt: str = get_env_or_default('keyboard_prompt', "keepclicking> ")
+    
+    offline_model_path: str | None = get_env_or_default('offline_model_path', None)
     wake_word_phrase: str = get_env_or_default('wake_word_phrase', "keeper")
     wake_word_listen_seconds: float = get_env_or_default('wake_word_listen_seconds', 5.0)
-    keyboard_prompt: str = get_env_or_default('keyboard_prompt', "keepclicking> ")
-    offline_model_path: str | None = get_env_or_default('offline_model_path', None)
 
 
 def get_config(base: AppConfig | None = AppConfig(), **overrides: object) -> AppConfig:
