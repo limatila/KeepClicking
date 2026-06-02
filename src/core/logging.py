@@ -3,23 +3,36 @@
 from __future__ import annotations
 
 import logging
-from logging import DEBUG
+from logging import DEBUG, INFO
+
+from src.core.config import get_env_or_default
+
+DEFAULT_LOG_FORMAT = get_env_or_default("LOGGING_FORMAT", "[%(levelname)s] | %(name)s -|- %(message)s")
 
 
-core_logger = logging.getLogger('baseLogger.core')
-core_logger.setLevel(DEBUG)
+CORE_LOGGER = logging.getLogger('baseLogger.core')
+RUNNER_LOGGER = logging.getLogger('baseLogger.runner')
+PARSER_LOGGER = logging.getLogger('baseLogger.parser')
+VALIDATOR_LOGGER = logging.getLogger('baseLogger.validator')
+CONTROLLER_LOGGER = logging.getLogger('baseLogger.controller')
 
-if not core_logger.handlers:
-	handler = logging.StreamHandler()
-	formatter = logging.Formatter(
-		"%(asctime)s %(name)s %(levelname)s %(message)s"
-	)
-	handler.setFormatter(formatter)
-	core_logger.addHandler(handler)
 
-core_logger.propagate = False
+for logger in [CORE_LOGGER, RUNNER_LOGGER, PARSER_LOGGER, VALIDATOR_LOGGER, CONTROLLER_LOGGER]:
+	
+	if not logger.handlers:
+		handler = logging.StreamHandler()
+		formatter = logging.Formatter(DEFAULT_LOG_FORMAT)
 
-for child in ("runner", "parser", "validator", "mouse"):
-	logging.getLogger(f"baseLogger.{child}")
+		if logger.name == "baseLogger.core":
+			handler.setLevel(DEBUG)
+		else:
+			handler.setLevel(INFO)
 
-core_logger.info("core loggers initialized")
+		handler.setFormatter(formatter)
+		logger.addHandler(handler)
+
+	if logger.name == "baseLogger.core":
+		logger.propagate = False
+
+
+CORE_LOGGER.info("loggers initialized")

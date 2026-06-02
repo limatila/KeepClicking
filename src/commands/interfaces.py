@@ -1,13 +1,11 @@
-import logging
 from typing import Protocol
 
 from src.core.config import AppConfig
 from src.core.dataclasses import BaseCommand
 from src.core.errors import ValidationError
+from src.core.logging import VALIDATOR_LOGGER
 
 from src.commands.dataclasses import ParseResult, ValidationResult
-
-LOGGER = logging.getLogger("baseLogger.validator")
 
 
 class CommandValidator:
@@ -36,9 +34,9 @@ class CommandValidator:
 				break
 		
 		if self.error:
-			LOGGER.error("validation_failed: %s at %s", self.error.reason, self.error.field)
+			VALIDATOR_LOGGER.error("validation_failed: %s at %s", self.error.reason, self.error.field)
 		else:
-			LOGGER.debug("validation_ok: %s", command.action)
+			VALIDATOR_LOGGER.debug("validation_ok: %s", command.action)
 		
 		return ValidationResult(command=self.command, error=self.error)
 

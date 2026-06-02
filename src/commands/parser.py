@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import logging
-
 from src.core.dataclasses import MouseCommand
 from src.core.choices import MouseCommandAction, CommandDirection
+from src.core.logging import PARSER_LOGGER
 
 from src.commands.dataclasses import ParseError, ParseResult
 from src.commands.interfaces import CommandParser
-
-LOGGER = logging.getLogger("baseLogger.parser")
 
 
 class MouseCommandParser(CommandParser):
