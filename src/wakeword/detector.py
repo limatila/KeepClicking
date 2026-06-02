@@ -8,6 +8,7 @@ from openwakeword import Model
 import sounddevice
 
 from src.core.errors import AdapterError
+from src.core.logging import ADAPTER_LOGGER
 
 from src.speech.interfaces import WakeWordEngineInterface
 
@@ -27,6 +28,7 @@ class OpenWakeWordEngine(WakeWordEngineInterface):
 		self.sample_rate = sample_rate
 		self.chunk_seconds = chunk_seconds
 		self.model = None
+		self.seconds_wainting = 0.0
 
 	def load_model(self):
 		if self.model is not None:
@@ -80,5 +82,10 @@ class OpenWakeWordEngine(WakeWordEngineInterface):
 			sounddevice.wait()
 			
 			score = self.score_frame(model, audio.reshape(-1))
+			ADAPTER_LOGGER.debug(f"[waiting {self.wake_word_phrase}] Listening for {self.seconds_wainting} seconds... Wake-word score: {score:.3f}")
+			self.seconds_wainting += self.chunk_seconds
+
 			if score >= self.threshold:
+				self.seconds_wainting = 0.0
+				ADAPTER_LOGGER.info(f"Wake-word '{self.wake_word_phrase}' detected!")
 				return True
