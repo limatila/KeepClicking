@@ -46,7 +46,7 @@ class OpenWakeWordEngine(WakeWordEngineInterface):
 
 		return self.model
 
-	def _score_frame(self, model, audio_frame):
+	def score_frame(self, model, audio_frame):
 		if hasattr(model, "predict"):
 			scores = model.predict(audio_frame)
 		elif hasattr(model, "infer"):
