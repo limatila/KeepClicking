@@ -66,10 +66,10 @@ class VoskSpeechAdapter(SpeechAdapterInterface):
 			else:
 				result_json = recognizer.FinalResult()
 
-			# try:
-			# 	return json.loads(result_json).get("text", "")
-			# except json.JSONDecodeError:
-			# 	return ""
+			try:
+				return json.loads(result_json).get("text", "")
+			except json.JSONDecodeError:
+				return ""
 			
 			return json.loads(result_json).get("text", "")
 		

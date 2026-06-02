@@ -39,12 +39,10 @@ class OpenWakeWordEngine(WakeWordEngineInterface):
 			except Exception:
 				pass
 
-		# try:
-		# 	self.model = Model()
-		# except Exception as err:
-		# 	raise AdapterError("OpenWakeWord model initialization failed") from err
-
-		self.model = Model()
+		try:
+			self.model = Model()
+		except Exception as err:
+			raise AdapterError("OpenWakeWord model initialization failed") from err
 
 		return self.model
 
