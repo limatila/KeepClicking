@@ -70,9 +70,7 @@ class VoskSpeechAdapter(SpeechAdapterInterface):
 				return json.loads(result_json).get("text", "")
 			except json.JSONDecodeError:
 				return ""
-			
-			return json.loads(result_json).get("text", "")
-		
+
 		except AdapterError:
 			raise
 		
