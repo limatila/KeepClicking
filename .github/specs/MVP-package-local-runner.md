@@ -1,4 +1,4 @@
-# 017 — MVP Package Local Runner
+# MVP Package Local Runner
 
 Status: `[PENDING]`
 

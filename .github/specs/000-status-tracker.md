@@ -32,7 +32,7 @@ Statuses to use: `[PENDING]`, `[IN PROGRESS]`, `[COMPLETE]`, `[INCOMPLETE]`
 | 019 | adr-wake-word-engine-selection | `[COMPLETE]` |
 | 020 | adr-gui-deferred | `[COMPLETE]` |
 | 021 | adr-packaging-toolchain | `[COMPLETE]` |
-| MVP | MVP-package-local-runner | `[COMPLETE]` |
+| MVP | MVP-package-local-runner | `[PENDING]` |
 
 ## Rule
 
