@@ -5,11 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Callable
 
-from src.commands.interfaces import CommandParser, CommandValidator
 from src.core.config import AppConfig
 from src.core.errors import ApplicationError
+from src.core.logging import CORE_LOGGER
+
 from src.service.interfaces import Controller
 from src.speech.interfaces import SpeechAdapterInterface
+from src.commands.interfaces import CommandParser, CommandValidator
 
 
 class MouseApplicationRunner:
@@ -23,7 +25,7 @@ class MouseApplicationRunner:
 		validator: CommandValidator,
 		controller: Controller,
 		config: AppConfig,
-		logger: logging.Logger,
+		logger: logging.Logger = CORE_LOGGER,
 	) -> None:
 		self.adapter = adapter
 		self.normalizer = normalizer
@@ -48,18 +50,16 @@ class MouseApplicationRunner:
 				self.logger.debug(f"normalized_text: {normalized}")
 
 				parse_result = self.parser.parse(normalized)
-				if parse_result.command is None:
-					if parse_result.error is not None:
-						self.logger.error(f"parse_error: {parse_result.error.reason}")
+				if parse_result.error is not None:
+					self.logger.error(f"parse_error: {parse_result.error.reason}")
 					continue
 
 				validation = self.validator.validate(parse_result.command)
-				if validation.command is None:
-					if validation.error is not None:
-						self.logger.error(f"validation_error: {validation.error.reason}")
+				if validation.error is not None:
+					self.logger.error(f"validation_error: {validation.error.reason}")
 					continue
 
-				# MouseClicks
+				# Mouse Clicks
 				execution = self.controller.execute(
 					validation.command, self.config
 				)
