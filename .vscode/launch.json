@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run CLI App",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "module": "src.cli",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args": [
+                "uv", "run", "-m", "src.cli"
+            ]
+        }
+    ]
+}
