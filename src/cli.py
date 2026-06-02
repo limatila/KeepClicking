@@ -12,11 +12,11 @@ from src.commands.parser import MouseCommandParser
 from src.commands.validator import MouseCommandValidator
 from src.service.hardware_controller import PyAutoGuiMouseController
 
-APP_CONFIG = get_config()
+APP_CONFIG = get_config(debug_mode=True)
 
 
 def main():
-    CORE_LOGGER.info("![DEV] Starting KeepClicking CLI runner...")
+    CORE_LOGGER.info("![DEV] Starting KeepClicking CLI runner...\n")
     
     runner = MouseApplicationRunner(
         adapter=VoskSpeechAdapter(

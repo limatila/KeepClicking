@@ -20,19 +20,23 @@ def get_env_or_default(key: str, default: str) -> str:
     return key_result
 
 
-class InputMode(str, Enum):
-    """Enumerates supported input modes for the MVP pipeline."""
-
-    SPEECH_OFFLINE = "speech_offline"
-    KEYBOARD_DEV = "keyboard_dev"
+DEBUG_MODE = get_env_or_default('debug_mode', 'False').title() == 'True'
 
 
 @dataclass(frozen=True)
 class AppConfig:
     """Defines runtime configuration defaults for the MVP pipeline."""
+    
+    class InputMode(str, Enum):
+        """Enumerates supported input modes for the MVP pipeline."""
+
+        SPEECH_OFFLINE = "speech_offline"
+        KEYBOARD_DEV = "keyboard_dev"
+
+    debug_mode: bool = DEBUG_MODE
 
     pyautogui_pause_seconds: float = get_env_or_default('pyautogui_pause_seconds', 0.1)
-    pyautogui_failsafe: bool = get_env_or_default('pyautogui_failsafe', True)
+    pyautogui_failsafe: bool | None = get_key(ENV_PATH, 'pyautogui_failsafe')
     
     input_mode: InputMode = get_env_or_default('input_mode', InputMode.SPEECH_OFFLINE)
     mouse_movement_pixels: int = get_env_or_default('mouse_movement_pixels', 50)
@@ -44,6 +48,10 @@ class AppConfig:
     wake_word_phrase: str = get_env_or_default('wake_word_phrase', "keeper")
     wake_word_listen_seconds: float = get_env_or_default('wake_word_listen_seconds', 5.0)
 
+    def __post_init__(self):
+        if self.debug_mode and not self.pyautogui_failsafe:
+            object.__setattr__(self, 'pyautogui_failsafe', self.debug_mode)
+
 
 def get_config(base: AppConfig | None = AppConfig(), **overrides: object) -> AppConfig:
     """Return a copy of the config with overrides if present."""
@@ -52,3 +60,4 @@ def get_config(base: AppConfig | None = AppConfig(), **overrides: object) -> App
         return replace(base, **overrides)
     else:
         return base
+
