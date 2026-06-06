@@ -5,7 +5,7 @@ from src.core.dataclasses import BaseCommand
 from src.core.errors import ValidationError
 from src.core.logging import VALIDATOR_LOGGER
 
-from src.commands.dataclasses import ParseResult, ValidationResult
+from src.command_mapper.dataclasses import ParseResult, ValidationResult
 
 
 class CommandValidator:

@@ -6,8 +6,8 @@ from src.core.choices import MouseCommandAction, CommandDirection
 from src.core.errors import ValidationError
 from src.core.logging import VALIDATOR_LOGGER
 
-from src.commands.dataclasses import ValidationResult
-from src.commands.interfaces import CommandValidator
+from src.command_mapper.dataclasses import ValidationResult
+from src.command_mapper.interfaces import CommandValidator
 
 
 class MouseCommandValidator(CommandValidator):

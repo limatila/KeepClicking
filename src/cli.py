@@ -3,13 +3,13 @@
 from src.core.logging import CORE_LOGGER
 from src.core.config import get_config
 
-from src.service.runner import MouseApplicationRunner
+from src.service.application_runner import MouseApplicationRunner
 
-from src.wakeword.detector import OpenWakeWordEngine
+from src.speech.wakeword.engine import OpenWakeWordEngine
 from src.speech.offline_vosk_adapter import VoskSpeechAdapter
-from src.commands.normalizer import normalize_text
-from src.commands.parser import MouseCommandParser
-from src.commands.validator import MouseCommandValidator
+from src.command_mapper.normalizer import normalize_text
+from src.command_mapper.parser import MouseCommandParser
+from src.command_mapper.validator import MouseCommandValidator
 from src.service.hardware_controller import PyAutoGuiMouseController
 
 APP_CONFIG = get_config(debug_mode=True)
@@ -20,7 +20,7 @@ def main():
     
     runner = MouseApplicationRunner(
         adapter=VoskSpeechAdapter(
-            APP_CONFIG, OpenWakeWordEngine(APP_CONFIG.wake_word_phrase)
+            APP_CONFIG, OpenWakeWordEngine(APP_CONFIG)
         ),
         normalizer=normalize_text,
         parser=MouseCommandParser(),

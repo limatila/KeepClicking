@@ -1,4 +1,4 @@
-from src.commands.validator import MouseCommandValidator
+from src.command_mapper.validator import MouseCommandValidator
 from src.core.dataclasses import MouseCommand
 from src.core.choices import MouseCommandAction, CommandDirection
 

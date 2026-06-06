@@ -1,4 +1,4 @@
-from src.commands.parser import MouseCommandParser
+from src.command_mapper.parser import MouseCommandParser
 from src.core.choices import MouseCommandAction, CommandDirection
 
 

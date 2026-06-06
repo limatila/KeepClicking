@@ -11,7 +11,7 @@ from src.core.logging import CORE_LOGGER
 
 from src.service.interfaces import Controller
 from src.speech.interfaces import SpeechAdapterInterface
-from src.commands.interfaces import CommandParser, CommandValidator
+from src.command_mapper.interfaces import CommandParser, CommandValidator
 
 
 class MouseApplicationRunner:

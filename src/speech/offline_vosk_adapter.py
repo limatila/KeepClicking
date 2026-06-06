@@ -12,7 +12,7 @@ from src.core.errors import AdapterError
 from src.speech.interfaces import SpeechAdapterInterface, WakeWordEngineInterface
 
 
-class VoskSpeechAdapter(SpeechAdapterInterface):
+class VoskSpeechAdapter(SpeechAdapterInterface): #! update to more compatible Faster-Whisper in new interface
 	"""Vosk-based speech adapter with wake-word gating."""
 
 	def __init__(self, config: AppConfig, wake_word_engine: WakeWordEngineInterface) -> None:

@@ -6,8 +6,8 @@ from src.core.dataclasses import MouseCommand
 from src.core.choices import MouseCommandAction, CommandDirection
 from src.core.logging import PARSER_LOGGER
 
-from src.commands.dataclasses import ParseError, ParseResult
-from src.commands.interfaces import CommandParser
+from src.command_mapper.dataclasses import ParseError, ParseResult
+from src.command_mapper.interfaces import CommandParser
 
 
 class MouseCommandParser(CommandParser):

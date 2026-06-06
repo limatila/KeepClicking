@@ -3,11 +3,11 @@ import logging
 from src.core.config import get_config
 from src.core.choices import MouseCommandAction
 
-from src.commands.normalizer import normalize_text
-from src.commands.parser import MouseCommandParser
-from src.commands.validator import MouseCommandValidator
+from src.command_mapper.normalizer import normalize_text
+from src.command_mapper.parser import MouseCommandParser
+from src.command_mapper.validator import MouseCommandValidator
 from src.service.dataclasses import MouseExecutionResult
-from src.service.runner import MouseApplicationRunner
+from src.service.application_runner import MouseApplicationRunner
 
 
 class FakeAdapter:

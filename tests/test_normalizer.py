@@ -1,4 +1,4 @@
-from src.commands.normalizer import normalize_text
+from src.command_mapper.normalizer import normalize_text
 
 
 def test_normalize_click():
