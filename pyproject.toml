@@ -3,16 +3,23 @@ name = "keepclicking"
 version = "0.1.0"
 description = "Voice-activated mouse control 24/7"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11,<3.12"
+
 dependencies = [
-    "ctranslate2>=4.7.2",
-    "dotenv>=0.9.9",
-    "faker>=40.19.1",
-    "faster-whisper>=1.2.1",
-    "numpy>=2.4.6",
-    "openwakeword>=0.4.0",
-    "pyautogui>=0.9.54",
-    "pytest>=9.0.3",
-    "sounddevice>=0.5.5",
+    "numpy>=2.4.6,<3",
+    "sounddevice>=0.5.5,<0.6",
+    "pyautogui>=0.9.54,<1",
+    "python-dotenv>=1.2.2,<2",
+    "openwakeword==0.6.0",
+    "onnxruntime>=1.24.1,<2",
+    "faster-whisper>=1.2.1,<2",
     "vosk>=0.3.45",
+    "ctranslate2>=4.6.0,<5",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3,<10",
+    "faker>=40.19.1,<41",
+    "pyinstaller>=6.16,<7",
 ]
