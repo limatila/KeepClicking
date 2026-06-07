@@ -29,25 +29,24 @@ class OpenWakeWordEngine(WakeWordEngineInterface):
 		self.threshold = threshold
 		self.sample_rate = sample_rate
 		self.chunk_seconds = chunk_seconds
-		self.model = None
+		self.model: Model = None
 		self.seconds_waiting = 0.0
 
 	def load_model(self):
-		if self.model is not None:
-			return self.model
-
-		if os.path.exists(self.wake_word_phrase):
-			try:
-				self.model = Model(
-					wakeword_models=[self.wake_word_phrase], inference_framework="onnx"
-				)
-				return self.model
-			except Exception:
-				pass
-
 		try:
-			self.model = Model(inference_framework="onnx")
+			if self.model is None:
+				if not os.path.exists(self.model_path):
+					raise FileNotFoundError("Wake-word model not found")
+
+				self.model = Model(
+						wakeword_models=[self.model_path], inference_framework="onnx"
+					)
+
 			return self.model
+
+		except FileNotFoundError:
+			raise
+
 		except Exception as err:
 			raise AdapterError("OpenWakeWord model initialization failed") from err
 
@@ -80,21 +79,22 @@ class OpenWakeWordEngine(WakeWordEngineInterface):
 		if frames <= 0:
 			raise AdapterError("Invalid wake-word frame size")
 
-		while True:
-			audio = sounddevice.rec(
-				frames,
-				samplerate=self.sample_rate,
-				channels=1,
-				dtype="float32",
-			)
-			sounddevice.wait()
-			
-			score = self.score_frame(model, audio.reshape(-1))
+		with sounddevice.InputStream(
+			samplerate=self.sample_rate,
+			channels=1,
+			dtype="float32",
+			blocksize=frames,
+		) as stream:
+			while True:
+				audio, _ = stream.read(frames)
+				score = self.score_frame(model, audio.reshape(-1))
 
-			ADAPTER_LOGGER.debug(f"[waiting {self.wake_word_phrase}] Listening for {self.seconds_waiting} seconds... Wake-word score: {score:.3f}")
-			self.seconds_waiting += self.chunk_seconds
+				ADAPTER_LOGGER.debug(
+					f"[waiting {self.wake_word_phrase}] Listening for {self.seconds_waiting} seconds... Wake-word score: {score:.3f}"
+				)
+				self.seconds_waiting += self.chunk_seconds
 
-			if score >= self.threshold:
-				self.seconds_waiting = 0.0
-				ADAPTER_LOGGER.info(f"Wake-word '{self.wake_word_phrase}' detected!")
-				return True
+				if score >= self.threshold:
+					self.seconds_waiting = 0.0
+					ADAPTER_LOGGER.info(f"Wake-word '{self.wake_word_phrase}' detected!")
+					return True

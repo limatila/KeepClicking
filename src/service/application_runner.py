@@ -6,7 +6,7 @@ import logging
 from typing import Callable
 
 from src.core.config import AppConfig
-from src.core.errors import ApplicationError
+from src.core.errors import AdapterError, ApplicationError
 from src.core.logging import CORE_LOGGER
 
 from src.service.interfaces import Controller
@@ -71,6 +71,9 @@ class MouseApplicationRunner:
 					self.logger.info(f"execution_stopped")
 					break
 			
+			except AdapterError:
+				raise
+
 			except ApplicationError as exc:
 				self.logger.error(f"application_error_in_runtime: {exc}")
 				continue
