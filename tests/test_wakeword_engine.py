@@ -3,11 +3,12 @@ import numpy as np
 from src.core.config import get_config
 import src.speech.wakeword.engine as wakeword_engine
 from src.speech.wakeword.engine import OpenWakeWordEngine
+from src.speech.interfaces import resolve_audio_input_device
 
 
 def test_load_model_uses_configured_model_path(monkeypatch):
     created_models = []
-    config = get_config(openwakeword_model_path="/tmp/custom_wakeword.onnx")
+    config = get_config(openwakeword_model_path="/tmp/custom_wakeword.onnx", audio_input_device=None)
 
     class FakeModel:
         def __init__(self, *args, **kwargs):
@@ -30,7 +31,7 @@ def test_load_model_uses_configured_model_path(monkeypatch):
 
 
 def test_wait_for_wake_word_reuses_one_input_stream(monkeypatch):
-    config = get_config(wake_word_phrase="keeper", openwakeword_model_path="/tmp/custom_wakeword.onnx")
+    config = get_config(wake_word_phrase="keeper", openwakeword_model_path="/tmp/custom_wakeword.onnx", audio_input_device=None)
     engine = OpenWakeWordEngine(config, threshold=0.5, sample_rate=16000, chunk_seconds=0.25)
 
     class FakeModel:
@@ -66,3 +67,62 @@ def test_wait_for_wake_word_reuses_one_input_stream(monkeypatch):
     assert engine.wait_for_wake_word() is True
     assert FakeInputStream.instances == 1
     assert FakeInputStream.read_calls == 2
+
+
+def test_wait_for_wake_word_passes_device_to_input_stream(monkeypatch):
+    monkeypatch.setattr(
+        "src.speech.audio_device_resolver.sounddevice.query_devices",
+        lambda: [
+            {"name": "Built-in Microphone", "max_input_channels": 0},
+            {"name": "USB 2.0 Microphone", "max_input_channels": 2},
+        ],
+    )
+    config = get_config(
+        wake_word_phrase="keeper",
+        openwakeword_model_path="/tmp/custom_wakeword.onnx",
+        audio_input_device="USB 2.0",
+    )
+    engine = OpenWakeWordEngine(config, threshold=0.5, sample_rate=16000, chunk_seconds=0.25)
+
+    class FakeModel:
+        def __init__(self):
+            self.calls = 0
+
+        def predict(self, audio_frame):
+            self.calls += 1
+            return 0.9
+
+    class FakeInputStream:
+        kwargs_seen = None
+
+        def __init__(self, *args, **kwargs):
+            FakeInputStream.kwargs_seen = kwargs
+            self.blocksize = kwargs["blocksize"]
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self, frames):
+            return np.zeros((frames, 1), dtype=np.float32), False
+
+    monkeypatch.setattr(engine, "load_model", lambda: FakeModel())
+    monkeypatch.setattr(wakeword_engine.sounddevice, "InputStream", FakeInputStream)
+
+    assert engine.wait_for_wake_word() is True
+    assert FakeInputStream.kwargs_seen is not None
+    assert FakeInputStream.kwargs_seen["device"] == 1
+
+
+def test_resolve_audio_input_device_substring(monkeypatch):
+    monkeypatch.setattr(
+        "src.speech.audio_device_resolver.sounddevice.query_devices",
+        lambda: [
+            {"name": "Built-in Microphone", "max_input_channels": 0},
+            {"name": "USB 2.0 Microphone", "max_input_channels": 2},
+        ],
+    )
+
+    assert resolve_audio_input_device("USB 2.0") == 1

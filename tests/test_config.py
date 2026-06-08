@@ -10,6 +10,7 @@ def test_get_config_defaults():
     assert config.pyautogui_failsafe is True
     assert config.wake_word_phrase == "keeper"
     assert config.wake_word_listen_seconds == 5.0 
+    assert config.audio_input_device == "USB 2.0"
     assert config.keyboard_prompt == "keepclicking> "
     assert config.offline_model_path is None
 
