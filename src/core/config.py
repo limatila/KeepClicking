@@ -48,6 +48,7 @@ class AppConfig:
     offline_model_path: str | None = get_env_or_default('offline_model_path', None)
     wake_word_phrase: str = get_env_or_default('wake_word_phrase', "keeper")
     wake_word_listen_seconds: float = get_env_or_default('wake_word_listen_seconds', 5.0)
+    audio_input_device: str | None = get_key(ENV_PATH, 'audio_input_device')
 
     def __post_init__(self):
         if self.debug_mode and not self.pyautogui_failsafe:

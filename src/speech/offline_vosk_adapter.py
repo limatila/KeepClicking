@@ -4,15 +4,18 @@ from __future__ import annotations
 
 import json
 
+import numpy as np
 import sounddevice
 from vosk import KaldiRecognizer, Model
 
 from src.core.config import AppConfig
 from src.core.errors import AdapterError
-from src.speech.interfaces import SpeechAdapterInterface, WakeWordEngineInterface
+from src.core.logging import ADAPTER_LOGGER
+from src.speech.interfaces import get_amplitude_stats
+from src.speech.interfaces import SpeechAdapterInterface, WakeWordEngineInterface, CustumizableAudioInputMixin
 
 
-class VoskSpeechAdapter(SpeechAdapterInterface): #! update to more compatible Faster-Whisper in new interface
+class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface): #! update to more compatible Faster-Whisper in new interface
 	"""Vosk-based speech adapter with wake-word gating."""
 
 	def __init__(self, config: AppConfig, wake_word_engine: WakeWordEngineInterface) -> None:
@@ -21,6 +24,7 @@ class VoskSpeechAdapter(SpeechAdapterInterface): #! update to more compatible Fa
 		self.sample_rate = 16000
 		self.speech_model = None
 		self.speech_recognizer = None
+		self.device = self.resolve_audio_input_device(config.audio_input_device)
 
 	def _set_speech_models(self) -> None:
 		if self.speech_recognizer is not None:
@@ -42,8 +46,14 @@ class VoskSpeechAdapter(SpeechAdapterInterface): #! update to more compatible Fa
 			samplerate=self.sample_rate,
 			channels=1,
 			dtype="int16",
+			device=self.device,
 		)
 		sounddevice.wait()
+		ADAPTER_LOGGER.info(f"Speech capture listening on device: {self.device}")
+		stats = self.get_amplitude_stats(audio.astype(np.float32) / 32768.0)
+		ADAPTER_LOGGER.debug(
+			f"Recorded audio amplitude: peak={stats['peak']:.4f}, mean={stats['mean']:.4f}"
+		)
 		
 		return audio.tobytes()
 

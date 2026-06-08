@@ -6,15 +6,17 @@ import os
 
 from openwakeword import Model
 import sounddevice
+import numpy as np
 
 from src.core.errors import AdapterError
 from src.core.logging import ADAPTER_LOGGER
 from src.core.config import AppConfig
+from src.speech.interfaces import get_amplitude_stats
 
-from src.speech.interfaces import WakeWordEngineInterface
+from src.speech.interfaces import WakeWordEngineInterface, CustumizableAudioInputMixin
 
 
-class OpenWakeWordEngine(WakeWordEngineInterface):
+class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
 	"""OpenWakeWord-based wake-word detector."""
 
 	def __init__(
@@ -31,6 +33,7 @@ class OpenWakeWordEngine(WakeWordEngineInterface):
 		self.chunk_seconds = chunk_seconds
 		self.model: Model = None
 		self.seconds_waiting = 0.0
+		self.device = self.resolve_audio_input_device(config.audio_input_device)
 
 	def load_model(self):
 		try:
@@ -84,13 +87,17 @@ class OpenWakeWordEngine(WakeWordEngineInterface):
 			channels=1,
 			dtype="float32",
 			blocksize=frames,
+			device=self.device,
 		) as stream:
+			ADAPTER_LOGGER.info(f"Wake-word engine listening on device: {self.device}")
 			while True:
 				audio, _ = stream.read(frames)
 				score = self.score_frame(model, audio.reshape(-1))
+				stats = self.get_amplitude_stats(audio)
 
 				ADAPTER_LOGGER.debug(
-					f"[waiting {self.wake_word_phrase}] Listening for {self.seconds_waiting} seconds... Wake-word score: {score:.3f}"
+					f"[waiting {self.wake_word_phrase}] Listening for {self.seconds_waiting} seconds... Wake-word score: {score:.3f} | "
+					f"Amplitude peak={stats['peak']:.4f}, mean={stats['mean']:.4f}"
 				)
 				self.seconds_waiting += self.chunk_seconds
 
