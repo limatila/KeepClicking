@@ -26,12 +26,6 @@ DEBUG_MODE = get_env_or_default('debug_mode', 'False').title() == 'True'
 @dataclass(frozen=True)
 class AppConfig:
     """Defines runtime configuration defaults for the MVP pipeline."""
-    
-    class InputMode(str, Enum):
-        """Enumerates supported input modes for the MVP pipeline."""
-
-        SPEECH_OFFLINE = "speech_offline"
-        KEYBOARD_DEV = "keyboard_dev"
 
     debug_mode: bool = DEBUG_MODE
 
@@ -39,7 +33,6 @@ class AppConfig:
     pyautogui_pause_seconds: float = get_env_or_default('pyautogui_pause_seconds', 0.1)
     pyautogui_failsafe: bool | None = get_key(ENV_PATH, 'pyautogui_failsafe')
     
-    input_mode: InputMode = get_env_or_default('input_mode', InputMode.SPEECH_OFFLINE)
     mouse_movement_pixels: int = get_env_or_default('mouse_movement_pixels', 50)
     mouse_scroll_units: int = get_env_or_default('mouse_scroll_units', 300)
     
@@ -48,7 +41,7 @@ class AppConfig:
     offline_model_path: str | None = get_env_or_default('offline_model_path', None)
     wake_word_phrase: str = get_env_or_default('wake_word_phrase', "keeper")
     wake_word_listen_seconds: float = get_env_or_default('wake_word_listen_seconds', 5.0)
-    audio_input_device: str | None = get_key(ENV_PATH, 'audio_input_device')
+    audio_input_device: str | None = get_key(ENV_PATH, 'audio_input_device') #* Can be name or specific index
 
     def __post_init__(self):
         if self.debug_mode and not self.pyautogui_failsafe:

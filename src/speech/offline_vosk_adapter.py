@@ -11,7 +11,6 @@ from vosk import KaldiRecognizer, Model
 from src.core.config import AppConfig
 from src.core.errors import AdapterError
 from src.core.logging import ADAPTER_LOGGER
-from src.speech.interfaces import get_amplitude_stats
 from src.speech.interfaces import SpeechAdapterInterface, WakeWordEngineInterface, CustumizableAudioInputMixin
 
 
@@ -24,7 +23,7 @@ class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface): #!
 		self.sample_rate = 16000
 		self.speech_model = None
 		self.speech_recognizer = None
-		self.device = self.resolve_audio_input_device(config.audio_input_device)
+		self.device = self.resolve_audio_input_device_index(config.audio_input_device)
 
 	def _set_speech_models(self) -> None:
 		if self.speech_recognizer is not None:

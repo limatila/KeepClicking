@@ -31,42 +31,44 @@ class WakeWordEngineInterface(Protocol):
 class CustumizableAudioInputMixin:
 	"""Mixin to allow custom audio input device resolution for speech adapters."""
 
-	def resolve_audio_input_device(device_selector: str | None) -> int | None:
+	def resolve_audio_input_device_index(self, device_name: str | None) -> int | None:
 		"""Resolve a configured selector to a sounddevice input device index."""
-		if device_selector is None:
+		if device_name is None:
 			return None
 
-		selector = device_selector.strip()
-		if selector == "":
+		selector = device_name.strip()
+		if not selector:
 			return None
-
-		devices = sounddevice.query_devices()
 
 		try:
 			device_index = int(selector)
 		except ValueError:
 			device_index = None
 
+		devices = sounddevice.query_devices()
+		available_devices = list(filter(lambda device: device.get("max_input_channels", 0) > 0, devices))
+
 		if device_index is not None:
-			if 0 <= device_index < len(devices):
-				device_info = devices[device_index]
-				if device_info.get("max_input_channels", 0) > 0:
+			for device_info in available_devices:
+				if device_info.get("index") == device_index:
 					return device_index
-			raise AdapterError(f"Audio input device index '{selector}' is not a valid input device")
+			else:
+				raise AdapterError(f"Audio input device index '{selector}' is not a valid available index")
 
 		selector_lower = selector.lower()
-		for index, device_info in enumerate(devices):
-			if device_info.get("max_input_channels", 0) <= 0:
-				continue
-
+		for device_info in available_devices:
 			device_name = str(device_info.get("name", ""))
 			if selector_lower in device_name.lower():
-				return index
+				return device_info.get('index')
 
-		raise AdapterError(f"Audio input device '{selector}' not found")
+		else:
+			devices_listing = [
+				(device.get('index'), device.get('name', '').strip())
+				for device in available_devices
+			]
+			raise AdapterError(f"Audio input device '{selector}' not found. Available devices: {devices_listing}")
 
-
-	def get_amplitude_stats(audio: np.ndarray) -> dict[str, float]:
+	def get_amplitude_stats(self, audio: np.ndarray) -> dict[str, float]:
 		"""Return simple peak and mean amplitude statistics for captured audio."""
 		abs_audio = np.abs(audio)
 		return {

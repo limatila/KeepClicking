@@ -11,7 +11,6 @@ import numpy as np
 from src.core.errors import AdapterError
 from src.core.logging import ADAPTER_LOGGER
 from src.core.config import AppConfig
-from src.speech.interfaces import get_amplitude_stats
 
 from src.speech.interfaces import WakeWordEngineInterface, CustumizableAudioInputMixin
 
@@ -33,7 +32,7 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
 		self.chunk_seconds = chunk_seconds
 		self.model: Model = None
 		self.seconds_waiting = 0.0
-		self.device = self.resolve_audio_input_device(config.audio_input_device)
+		self.device_index = self.resolve_audio_input_device_index(config.audio_input_device)
 
 	def load_model(self):
 		try:
@@ -87,9 +86,9 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
 			channels=1,
 			dtype="float32",
 			blocksize=frames,
-			device=self.device,
+			device=self.device_index,
 		) as stream:
-			ADAPTER_LOGGER.info(f"Wake-word engine listening on device: {self.device}")
+			ADAPTER_LOGGER.info(f"Wake-word engine listening on device: {self.device_index}")
 			while True:
 				audio, _ = stream.read(frames)
 				score = self.score_frame(model, audio.reshape(-1))
