@@ -27,8 +27,10 @@ Offline-first speech recognition is preferred because it avoids cost, rate limit
 The speech engine must remain adapter-based so the project can later support:
 
 - Vosk
-- Whisper.cpp or faster-whisper
+- faster-whisper
 - Online speech-to-text providers
+
+The current repository implementation uses OpenWakeWord for activation and Vosk for offline speech recognition.
 
 ## MVP activation model
 
@@ -39,6 +41,7 @@ Always-on background daemon is the intended production mode.
 
 CLI usage is for development, debugging, and testing only.
 Production packages must not show a terminal window to the user.
+The current local entrypoint is `src/cli.py`, which wires the wake-word + offline speech pipeline directly.
 
 GUI-based configuration is a nice-to-have for the future but is deferred for MVP simplicity.
 

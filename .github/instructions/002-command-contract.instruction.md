@@ -9,6 +9,7 @@ name: "Command Contracts"
 ## Command object
 
 Every parsed command must be represented as a structured object.
+In the current repository this is `MouseCommand` from `src/core/dataclasses.py`, using enums from `src/core/choices.py`.
 
 Minimum fields:
 
@@ -33,7 +34,7 @@ Minimum fields:
 | move | down | configurable | move cursor down |
 | move | left | configurable | move cursor left |
 | move | right | configurable | move cursor right |
-| stop | null | 1 | stop current command loop |
+| stop | null | 0 | stop current command loop |
 
 ## Parser examples
 
@@ -54,3 +55,6 @@ Minimum fields:
 The parser must not execute commands.
 
 The mouse controller must not interpret raw text.
+
+Current implementation note:
+`MouseCommand` resolves default amounts from configuration at construction time, and the current parser attaches `direction` only for `move` commands.

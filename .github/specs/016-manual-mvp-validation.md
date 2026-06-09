@@ -1,6 +1,6 @@
 # 016 — Manual MVP Validation
 
-Status: `[COMPLETE]`
+Status: `[INCOMPLETE]`
 
 ## Purpose
 
@@ -55,6 +55,9 @@ Checklist:
 ## Manual validation
 
 - Complete the checklist on the development machine.
+
+Current drift:
+The checklist template exists, but the repository does not yet include a filled validation record.
 
 ## Dependencies
 

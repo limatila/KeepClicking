@@ -1,6 +1,6 @@
 # 005 — Implement Command Parser
 
-Status: `[COMPLETE]`
+Status: `[INCOMPLETE]`
 
 ## Purpose
 
@@ -24,7 +24,6 @@ Convert normalized text into command objects.
 ## Inputs
 
 - Normalized text string from the text normalizer.
-- Config defaults from `AppConfig`.
 
 ## Outputs
 
@@ -32,32 +31,24 @@ Convert normalized text into command objects.
 
 ## Implementation requirements
 
-- Create `src/commands/parser.py` with:
-	- `@dataclass class ParseError` with fields `reason: str` and `raw_text: str`.
-	- `@dataclass class ParseResult` with fields:
-		- `command: Command | None`
-		- `error: ParseError | None`
-	- `class CommandParser(Protocol)` with a short class docstring and method:
-		- `def parse(self, text: str, config: AppConfig) -> ParseResult`
-	- `class RuleBasedCommandParser` implementing `CommandParser` with a short class docstring.
+- Create `src/command_mapper/dataclasses.py` with:
+	- `@dataclass class ParseError` with fields `reason: str` and `raw_text: str`
+	- `@dataclass class ParseResult` with fields `command: MouseCommand | None` and `error: ParseError | None`
+- Create `src/command_mapper/interfaces.py` with `class CommandParser(Protocol)` and method `def parse(self, text: str) -> ParseResult`.
+- Create `src/command_mapper/parser.py` with `class MouseCommandParser` implementing `CommandParser`.
 - Deterministic parsing only; no probabilistic matching.
-- RuleBasedCommandParser must map the normalized phrases:
-	- "click" -> `Command(action=CommandAction.CLICK)`
-	- "double click" -> `Command(action=CommandAction.DOUBLE_CLICK, amount=2)`
-	- "right click" -> `Command(action=CommandAction.RIGHT_CLICK)`
-	- "scroll up" -> `Command(action=CommandAction.SCROLL, direction=UP, amount=config.mouse_scroll_units)`
-	- "scroll down" -> `Command(action=CommandAction.SCROLL, direction=DOWN, amount=config.mouse_scroll_units)`
-	- "move up" -> `Command(action=CommandAction.MOVE, direction=UP, amount=config.mouse_movement_pixels)`
-	- "move down" -> `Command(action=CommandAction.MOVE, direction=DOWN, amount=config.mouse_movement_pixels)`
-	- "move left" -> `Command(action=CommandAction.MOVE, direction=LEFT, amount=config.mouse_movement_pixels)`
-	- "move right" -> `Command(action=CommandAction.MOVE, direction=RIGHT, amount=config.mouse_movement_pixels)`
-	- "stop" -> `Command(action=CommandAction.STOP)`
-- Unknown phrases must return `ParseResult(command=None, error=ParseError(...))` and never produce a command.
+- `MouseCommandParser` should:
+	- scan normalized text for the first `MouseCommandAction` value contained in the input
+	- create `MouseCommand(action=...)` once an action token is found
+	- resolve `CommandDirection` only when the parsed action is `MOVE`
+	- return `ParseError(reason="missing_command_direction", raw_text=text)` when a `move` command has no direction token
+	- return `ParseError(reason="unrecognized_command", raw_text=text)` when no action token is found
+- Amount defaults come from `MouseCommand.__post_init__()` and are not injected by the parser.
 
 Pseudo-code summary:
 
 ```text
-result = parser.parse(normalized, config)
+result = parser.parse(normalized)
 if result.command is None:
 		handle_parse_error(result.error)
 ```
@@ -70,6 +61,9 @@ if result.command is None:
 ## Manual validation
 
 - Manually parse all command contract examples.
+
+Current drift:
+The parser implementation exists in the documented module layout, but `double click` and `right click` currently collapse to `click`, and scroll commands do not yet carry parsed directions.
 
 ## Dependencies
 

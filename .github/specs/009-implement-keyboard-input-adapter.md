@@ -32,7 +32,7 @@ Create a dev-only input adapter for debugging and testing without microphone usa
 ## Implementation requirements
 
 - Create `src/speech/keyboard_adapter.py`.
-- Define `class KeyboardSpeechAdapter` implementing `SpeechAdapter` with a short class docstring.
+- Define `class KeyboardSpeechAdapter` implementing `SpeechAdapterInterface` with a short class docstring.
 - Constructor:
 	- `def __init__(self, prompt: str)`
 - Method behavior:

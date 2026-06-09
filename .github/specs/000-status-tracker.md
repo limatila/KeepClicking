@@ -27,12 +27,19 @@ Statuses to use: `[PENDING]`, `[IN PROGRESS]`, `[COMPLETE]`, `[INCOMPLETE]`
 | 013 | add-logging | `[COMPLETE]` |
 | 014 | add-error-handling | `[COMPLETE]` |
 | 015 | add-tests | `[COMPLETE]` |
-| 016 | manual-mvp-validation | `[COMPLETE]` |
+| 016 | manual-mvp-validation | `[INCOMPLETE]` |
+| 017 | package-local-runner | `[INCOMPLETE]` |
 | 018 | adr-offline-speech-engine-selection | `[COMPLETE]` |
 | 019 | adr-wake-word-engine-selection | `[COMPLETE]` |
 | 020 | adr-gui-deferred | `[COMPLETE]` |
 | 021 | adr-packaging-toolchain | `[COMPLETE]` |
 | MVP | MVP-package-local-runner | `[PENDING]` |
+
+## Ordering notes
+
+- Numbered specs are the canonical implementation order.
+- Step `012` is currently unused.
+- `MVP-package-local-runner.md` is a post-sequence packaging follow-up that comes after the numbered specs.
 
 ## Rule
 

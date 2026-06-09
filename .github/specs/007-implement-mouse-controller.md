@@ -32,24 +32,22 @@ Execute validated mouse actions through PyAutoGUI.
 
 ## Implementation requirements
 
-- Create `src/service/mouse_controller.py` with:
-	- `@dataclass class ExecutionResult` with fields `stopped: bool` and `error: str | None`.
-	- `class MouseController(Protocol)` with a short class docstring and method:
-		- `def execute(self, command: Command, config: AppConfig) -> ExecutionResult`
-	- `class PyAutoGuiMouseController` implementing `MouseController` with a short class docstring.
+- Create `src/service/dataclasses.py` with `@dataclass class MouseExecutionResult`.
+- Create `src/service/interfaces.py` with `class Controller(Protocol)` and method `def execute(self, command: MouseCommand, config: AppConfig) -> MouseExecutionResult`.
+- Create `src/service/hardware_controller.py` with `class PyAutoGuiMouseController` implementing `Controller`.
 - Only this module may import PyAutoGUI.
 - Set `pyautogui.PAUSE` and `pyautogui.FAILSAFE` using `AppConfig` values during execution.
 - PyAutoGuiMouseController command-to-call mapping:
-	- `CLICK` -> `pyautogui.click()`
-	- `DOUBLE_CLICK` -> `pyautogui.doubleClick()`
-	- `RIGHT_CLICK` -> `pyautogui.rightClick()`
+	- `CLICK` -> repeated `pyautogui.click()` based on `command.amount`
+	- `DOUBLE_CLICK` -> repeated `pyautogui.click()` based on `command.amount`
+	- `RIGHT_CLICK` -> repeated `pyautogui.rightClick()` based on `command.amount`
 	- `SCROLL` + `UP` -> `pyautogui.scroll(command.amount)`
 	- `SCROLL` + `DOWN` -> `pyautogui.scroll(-command.amount)`
 	- `MOVE` + `UP` -> `pyautogui.moveRel(0, -command.amount)`
 	- `MOVE` + `DOWN` -> `pyautogui.moveRel(0, command.amount)`
 	- `MOVE` + `LEFT` -> `pyautogui.moveRel(-command.amount, 0)`
 	- `MOVE` + `RIGHT` -> `pyautogui.moveRel(command.amount, 0)`
-	- `STOP` -> return `ExecutionResult(stopped=True, error=None)` without calling PyAutoGUI
+	- `STOP` -> return `MouseExecutionResult(stopped=True, error=None)` without calling PyAutoGUI
 
 Pseudo-code summary:
 

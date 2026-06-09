@@ -31,14 +31,15 @@ Add structured logging for development and debugging.
 
 ## Implementation requirements
 
-- Create `src/utils/logging.py` with:
-	- `def configure_logging(level: str = "INFO") -> logging.Logger`
+- Create `src/core/logging.py` with preconfigured module loggers.
 - Use the standard library `logging` module.
-- Configure a base logger named `baseLogger` and child loggers:
+- Configure a base logger namespace named `baseLogger` and child loggers:
+	- `baseLogger.core`
+	- `baseLogger.adapter`
 	- `baseLogger.runner`
 	- `baseLogger.parser`
 	- `baseLogger.validator`
-	- `baseLogger.mouse`
+	- `baseLogger.controller`
 - Ensure modules use the child loggers derived from `baseLogger`.
 - Do not log sensitive audio or high-volume data.
 - Keep log volume low by default.
@@ -46,8 +47,7 @@ Add structured logging for development and debugging.
 Pseudo-code summary:
 
 ```text
-logger = configure_logging(level=args.log_level)
-logger.info("runner_started")
+CORE_LOGGER.info("runner_started")
 ```
 
 ## Acceptance criteria

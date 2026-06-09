@@ -36,9 +36,9 @@ Wire the normalizer, parser, validator, speech adapter, and mouse controller tog
 - Keep each layer separate and loosely coupled.
 - Errors should not crash the loop unnecessarily.
 - Support a clean shutdown when a stop command is validated.
-- Create `src/service/runner.py` with:
-	- `class ApplicationRunner` and a short class docstring.
-    - `def __init__(self, adapter: SpeechAdapter, normalizer: Callable[[str], str], parser: CommandParser, validator: CommandValidator, controller: MouseController, config: AppConfig, logger: logging.Logger)`
+- Create `src/service/application_runner.py` with:
+	- `class MouseApplicationRunner` and a short class docstring.
+    - `def __init__(self, adapter: SpeechAdapterInterface, normalizer: Callable[[str], str], parser: CommandParser, validator: CommandValidator, controller: Controller, config: AppConfig, logger: logging.Logger)`
 	- `def run(self) -> None`
 - Loop semantics:
 	- Call `adapter.next_text()`; if `None`, exit the loop.
@@ -56,7 +56,7 @@ while True:
     if text is None: break
     if text == "": continue
     normalized = normalizer(text)
-    parse = parser.parse(normalized, config)
+    parse = parser.parse(normalized)
     if parse.command is None: continue
     valid = validator.validate(parse.command)
     if valid.command is None: continue

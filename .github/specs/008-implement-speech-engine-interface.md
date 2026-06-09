@@ -36,16 +36,17 @@ Define a replaceable interface for speech adapters that provide recognized text.
 
 - Create `src/speech/interfaces.py`.
 - Define a protocol or abstract base class:
-	- `class SpeechAdapter(Protocol)` with a short class docstring.
+	- `class SpeechAdapterInterface(Protocol)` with a short class docstring.
 	- `def next_text(self) -> str | None` returning recognized text or `None` on end-of-stream.
 	- `def close(self) -> None` for cleanup (no-op allowed).
 - Define a protocol:
-	- `class WakeWordEngine(Protocol)` with a short class docstring.
+	- `class WakeWordEngineInterface(Protocol)` with a short class docstring.
 	- `def wait_for_wake_word(self) -> bool` returning `True` when the wake word is detected.
+- Define `class CustumizableAudioInputMixin` with helpers for resolving audio device selectors and collecting simple amplitude statistics.
 - Keep the interfaces minimal and provider-agnostic.
 - Avoid leaking engine-specific configuration through the interfaces.
 - Allow a simple mock adapter for tests.
-- Treat `SpeechAdapter` as a base pattern: implementations should be named with their implementation (for example, `VoskSpeechAdapter`, `KeyboardSpeechAdapter`).
+- Treat `SpeechAdapterInterface` as a base pattern: implementations should be named with their implementation (for example, `VoskSpeechAdapter`, `KeyboardSpeechAdapter`).
 
 Pseudo-code summary:
 

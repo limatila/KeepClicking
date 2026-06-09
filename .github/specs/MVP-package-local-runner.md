@@ -4,13 +4,14 @@ Status: `[PENDING]`
 
 ## Purpose
 
-Prepare the project for user-friendly production packaging.
+Track the final packaging execution work that follows the numbered implementation specs and ADRs.
 
 ## Context
 
 - Users should be able to install and run the app without using a terminal.
 - Production packages must not show a terminal window.
 - Development workflows may use debug scripts, but no terminal launcher is required.
+- This file is an umbrella follow-up after the numbered specs, especially spec 017 and ADR 021.
 
 ## Scope
 
@@ -62,6 +63,7 @@ pyinstaller --windowed --onefile src
 
 - `016-manual-mvp-validation.md` - path: `.github/specs/016-manual-mvp-validation.md`
 - `015-add-tests.md` - path: `.github/specs/015-add-tests.md`
+- `017-package-local-runner.md` - path: `.github/specs/017-package-local-runner.md`
 - `018-adr-offline-speech-engine-selection.md` - path: `.github/specs/018-adr-offline-speech-engine-selection.md`
 - `021-adr-packaging-toolchain.md` - path: `.github/specs/021-adr-packaging-toolchain.md`
 

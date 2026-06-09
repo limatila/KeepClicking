@@ -9,7 +9,7 @@ Add the first offline speech-to-text adapter.
 ## Context
 
 - Offline-first recognition is preferred for cost, privacy, and reliability.
-- The preferred engine order is Vosk, then Whisper.cpp (or faster-whisper), then native APIs.
+- The preferred engine order is Vosk, then faster-whisper, then native APIs.
 - Selecting the initial engine requires an ADR per project policy.
 
 ## Scope
@@ -36,20 +36,20 @@ Add the first offline speech-to-text adapter.
 
 - Follow ADR decision in `018-adr-offline-speech-engine-selection.md`.
 - Create `src/speech/offline_vosk_adapter.py`.
-- Define `class VoskSpeechAdapter` implementing `SpeechAdapter` with a short class docstring.
+- Define `class VoskSpeechAdapter` implementing `SpeechAdapterInterface` with a short class docstring.
 - Constructor:
-	- `def __init__(self, config: AppConfig, wake_word_engine: WakeWordEngine)`
+	- `def __init__(self, config: AppConfig, wake_word_engine: WakeWordEngineInterface)`
 	- Use `config.offline_model_path` if provided.
 - `next_text()` behavior:
 	- Block until `wake_word_engine.wait_for_wake_word()` returns `True`.
 	- Capture audio for up to `config.wake_word_listen_seconds`.
 	- Return recognized text or an empty string if no speech is captured.
 	- Return `None` on end-of-stream or unrecoverable adapter failure.
-- Implement the wake-word engine using OpenWakeWord per ADR 019 in `src/wakeword/detector.py` as `OpenWakeWordEngine` implementing `WakeWordEngine`.
+- Implement the wake-word engine using OpenWakeWord per ADR 019 in `src/speech/wakeword/engine.py` as `OpenWakeWordEngine` implementing `WakeWordEngineInterface`.
 - Use `sounddevice` for microphone capture.
 - Add the selected engine dependency (Vosk) to `pyproject.toml` if it is not already present.
-- All optional dependencies must be imported lazily. On missing dependency, raise `OptionalDependencyError` from `core/errors.py` with a clear message.
-- Keep dependencies isolated: dev keyboard mode must work without speech dependencies installed.
+- Adapter failures should raise `AdapterError` with a clear message.
+- Keep dependencies isolated enough that the keyboard adapter remains testable as a separate dev-only path.
 
 Pseudo-code summary:
 

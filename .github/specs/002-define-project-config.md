@@ -4,7 +4,7 @@ Status: `[COMPLETE]`
 
 ## Purpose
 
-Define runtime configuration defaults for movement, scrolling, and safety, and expose a typed configuration object for the MVP pipeline.
+Define runtime configuration defaults for movement, scrolling, wake-word behavior, and safety, and expose a typed configuration object for the MVP pipeline.
 
 ## Context
 
@@ -15,9 +15,9 @@ Define runtime configuration defaults for movement, scrolling, and safety, and e
 
 ## Scope
 
-- Create a configuration module with defaults for movement pixels, scroll units, and safety pause.
-- Include a speech-first input mode default and dev-only keyboard option.
-- Add wake-word defaults and offline speech placeholders without implementing persistence.
+- Create a configuration module with defaults for movement pixels, scroll units, wake-word settings, and PyAutoGUI safety values.
+- Load configuration values from `.env` when present while preserving code defaults.
+- Expose helper functions for copying config with overrides.
 
 ## Out of scope
 
@@ -35,26 +35,27 @@ Define runtime configuration defaults for movement, scrolling, and safety, and e
 ## Implementation requirements
 
 - Create `src/core/config.py`.
-- Define `InputMode` as a `str` enum with at least:
-	- `SPEECH_OFFLINE = "speech_offline"`
-	- `KEYBOARD_DEV = "keyboard_dev"`
 - Define `AppConfig` as a dataclass with explicit defaults:
+	- `debug_mode: bool`
+	- `openwakeword_model_path: str`
 	- `mouse_movement_pixels: int = 50`
 	- `mouse_scroll_units: int = 300`
 	- `pyautogui_pause_seconds: float = 0.1`
-	- `pyautogui_failsafe: bool = True`
+	- `pyautogui_failsafe: bool | None`
 	- `wake_word_phrase: str = "keeper"`
 	- `wake_word_listen_seconds: float = 5.0`
 	- `keyboard_prompt: str = "keepclicking> "`
 	- `offline_model_path: str | None = None`
-- Provide `def get_config(base: AppConfig | None = None, **overrides) -> AppConfig` that returns defaults when `base` is `None`, otherwise returns a copy with overrides.
-- Add short class docstrings to `InputMode` and `AppConfig` describing their purpose.
+	- `audio_input_device: str | None = None`
+- Provide `get_env_or_default(key: str, default: str) -> str` for `.env`-backed values.
+- Provide `def get_config(base: AppConfig | None = AppConfig(), **overrides) -> AppConfig` that returns the current config object when `overrides` are absent and a copied dataclass when overrides are provided.
+- Add a short class docstring to `AppConfig` describing its purpose.
 
 Pseudo-code summary:
 
 ```text
 config = get_config()
-config = get_config(config, mouse_movement_pixels=100)
+config = get_config(config, mouse_movement_pixels=100, audio_input_device="USB")
 ```
 
 ## Acceptance criteria

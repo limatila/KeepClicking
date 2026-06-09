@@ -9,14 +9,16 @@ name: "KeepClicking Architecture Overview"
 
 ## Technologies involved
 
-- Python 3.13+
+- Python 3.11
 │
+├── python-dotenv
+├── numpy
 ├── SoundDevice
 ├── OpenWakeWord
-├── Vosk (primary offline engine)
-├── Faster-Whisper (optional alternative)
+├── Vosk (current offline engine)
+├── faster-whisper (installed for future evaluation, not wired into the current runtime path)
 ├── PyAutoGUI
-├── PySide6 (deferred)
+├── ONNX Runtime
 └── Pytest
 
 ## Flow overview
@@ -63,36 +65,44 @@ KeepClicking/
 │   ├── cli.py (dev-only harness)
 │   ├── core/
 │   │   ├── config.py
+│   │   ├── choices.py
+│   │   ├── dataclasses.py
 │   │   ├── errors.py
-│   │   └── models.py
-│   ├── audio/
-│   │   └── capture.py
-│   ├── wakeword/
-│   │   └── detector.py
-│   ├── speech/
+│   │   ├── logging.py
+│   │   └── interfaces/
+│   │       └── choices.py
+│   ├── command_mapper/
+│   │   ├── dataclasses.py
 │   │   ├── interfaces.py
-│   │   ├── keyboard_adapter.py
-│   │   └── offline_vosk_adapter.py
-│   ├── commands/
 │   │   ├── normalizer.py
 │   │   ├── parser.py
 │   │   └── validator.py
-│   ├── service/
-│   │   ├── mouse_controller.py
-│   │   └── runner.py
-│   └── utils/
-│       └── logging.py
+│   ├── speech/
+│   │   ├── interfaces.py
+│   │   ├── keyboard_adapter.py
+│   │   ├── offline_vosk_adapter.py
+│   │   └── wakeword/
+|   |       ├── models/
+│   │       └── engine.py
+│   └── service/
+│       ├── application_runner.py
+│       ├── dataclasses.py
+│       ├── hardware_controller.py
+│       └── interfaces.py
 │
 ├── tests/
-│   ├── test_audio.py
-│   ├── test_wakeword.py
-│   ├── test_speech.py
-│   └── etc...
+│   ├── test_audio_device_resolver.py
+│   ├── test_config.py
+│   ├── test_mouse_controller.py
+│   ├── test_normalizer.py
+│   ├── test_offline_vosk_adapter.py
+│   ├── test_parser.py
+│   ├── test_runner.py
+│   ├── test_validator.py
+│   └── test_wakeword_engine.py
 │
 ├── scripts/
-│   ├── build.py
-│   ├── package.py
-│   └── release.py
+│   └── build-global.py
 │
 ├── requirements.txt
 ├── .python-version
@@ -120,7 +130,7 @@ Example sentence: "Vosk Speech Adapter" means Vosk is the implementation, Speech
 Rules:
 
 - Base patterns must be defined as Protocols/ABCs or base classes.
-- Concrete implementations must include the implementation in the class name (for example, `VoskSpeechAdapter`, `OpenWakeWordEngine`, `PyAutoGuiMouseController`, `RuleBasedCommandParser`, `RuleBasedCommandValidator`).
+- Concrete implementations should keep the implementation or domain role in the class name (for example, `VoskSpeechAdapter`, `OpenWakeWordEngine`, `PyAutoGuiMouseController`, `MouseCommandParser`, `MouseCommandValidator`, `MouseApplicationRunner`).
 - Higher layers depend on base patterns, not concrete implementations.
 
 ### Typed Payloads Usage
@@ -132,23 +142,23 @@ Strictly type of commands, standard strings, and choice-like data shall be as En
 class BaseChoice(str, Enum): #* Defined at core of project for reuse
     pass
 
-class CommandActionChoice(BaseChoice):
+class MouseCommandAction(BaseChoice):
+    STOP = "stop"
     CLICK = "click"
     DOUBLE_CLICK = "double_click"
     RIGHT_CLICK = "right_click"
     SCROLL = "scroll"
     MOVE = "move"
-    STOP = "stop"
 ```
 
 so then, they can be used as a type of attribute in a dataclass:
 
 ```python
 @dataclass
-class Command:
-    action: CommandActionChoice
+class MouseCommand:
+    action: MouseCommandAction
     amount: int
-    direction: Optional[str] = None
+    direction: Optional[CommandDirection] = None
 ```
 
 ## Project layers
@@ -186,5 +196,6 @@ CLI is a dev-only harness used for testing and debugging.
 ## Architecture rule
 
 Only the Mouse Controller may directly import and call PyAutoGUI.
+In the current repository, that integration boundary is `src/service/hardware_controller.py`.
 
 Other modules must depend on internal command objects, not PyAutoGUI.

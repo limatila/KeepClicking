@@ -1,6 +1,6 @@
 # 006 — Implement Command Validator
 
-Status: `[COMPLETE]`
+Status: `[INCOMPLETE]`
 
 ## Purpose
 
@@ -31,17 +31,16 @@ Validate parsed commands before execution.
 
 ## Implementation requirements
 
-- Create `src/commands/validator.py` with:
-	- `@dataclass class ValidationError` with fields `reason: str` and `field: str | None`.
-	- `@dataclass class ValidationResult` with fields:
-		- `command: Command | None`
-		- `error: ValidationError | None`
-	- `class CommandValidator(Protocol)` with a short class docstring and method:
-		- `def validate(self, command: Command) -> ValidationResult`
-	- `class RuleBasedCommandValidator` implementing `CommandValidator` with a short class docstring.
-- RuleBasedCommandValidator must reject unknown actions, invalid directions, and non-positive amounts.
-- RuleBasedCommandValidator must ensure `direction` is only present for `move` and `scroll` actions.
-- RuleBasedCommandValidator must ensure `direction` is `None` for `click`, `double_click`, `right_click`, and `stop`.
+- Create `src/command_mapper/dataclasses.py` with `@dataclass class ValidationResult`.
+- Use `ValidationError` from `src/core/errors.py`.
+- Create `src/command_mapper/interfaces.py` with `class CommandValidator` base behavior and method `def validate(self, command: BaseCommand) -> ValidationResult`.
+- Create `src/command_mapper/validator.py` with `class MouseCommandValidator` implementing the current MVP rules.
+- `MouseCommandValidator` must reject:
+	- actions that are not instances of `MouseCommandAction`
+	- negative amounts
+	- `move` commands without a direction
+	- `move` commands whose direction is not a `CommandDirection`
+	- non-`move` commands that still carry a direction
 - Validation must be deterministic and side-effect free.
 
 Pseudo-code summary:
@@ -60,6 +59,9 @@ if result.command is None:
 ## Manual validation
 
 - Create invalid command objects and confirm rejection.
+
+Current drift:
+The validator wiring exists, but the current rules still allow `scroll` commands without a direction and accept zero-amount non-stop commands.
 
 ## Dependencies
 

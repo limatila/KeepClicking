@@ -32,14 +32,14 @@ Make the app fail safely.
 ## Implementation requirements
 
 - Create `src/core/errors.py` with:
-	- `class KeepClickingError(Exception)` base class with short docstring.
-	- `class OptionalDependencyError(KeepClickingError)` for missing optional deps.
-	- `class MouseExecutionError(KeepClickingError)` for PyAutoGUI failures.
-	- `class AdapterError(KeepClickingError)` for input adapter failures.
-- Parser and validator must use result objects and must not raise exceptions for expected failures.
-- The runner catches `KeepClickingError` and logs the message without exiting the loop (unless `stop` is requested).
+	- `class ApplicationError(Exception)` as the current base class with a short docstring
+	- `class MouseExecutionError(ApplicationError)` for PyAutoGUI failures
+	- `class AdapterError(ApplicationError)` for input adapter failures
+	- `class ValidationError(Exception)` carrying `reason` and `field`
+- Parser and validator must use result objects and must not raise exceptions for expected failures, except for validator rule methods that raise `ValidationError` internally and are converted into result objects.
+- The runner catches `ApplicationError` and logs the message without exiting the loop (unless `stop` is requested).
 - Unknown speech must not execute any action.
-- Dependency errors must explain fallback behavior.
+- Adapter errors must explain the failure clearly enough for local debugging.
 - Exceptions from PyAutoGUI must be caught and reported safely.
 - Make sure existing processes uses the Exceptions pattern for error handling, and refactor if necessary to align with this approach.
 

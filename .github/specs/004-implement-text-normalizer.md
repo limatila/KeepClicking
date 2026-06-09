@@ -32,7 +32,7 @@ Normalize recognized text before parsing to ensure deterministic command matchin
 
 ## Implementation requirements
 
-- Create `src/commands/normalizer.py`.
+- Create `src/command_mapper/normalizer.py`.
 - Implement a pure function:
 	- `def normalize_text(raw_text: str) -> str`
 - Normalization steps (deterministic order):

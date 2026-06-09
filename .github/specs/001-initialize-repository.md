@@ -14,7 +14,7 @@ Create the initial Python repository layout for KeepClicking.
 ## Scope
 
 - Establish the Python package layout under `src/`.
-- Create package submodules for core, commands, speech, service, utils, audio, and wakeword.
+- Create package submodules for core, command mapping, speech, service, and wake-word support.
 - Create a `tests/` package for unit tests.
 
 ## Out of scope
@@ -39,21 +39,25 @@ Create the initial Python repository layout for KeepClicking.
 	- `src/__init__.py`
 	- `src/cli.py` (dev-only harness)
 	- `src/core/config.py`
-	- `src/core/models.py`
+	- `src/core/choices.py`
+	- `src/core/dataclasses.py`
 	- `src/core/interfaces/__init__.py`
 	- `src/core/interfaces/choices.py`
 	- `src/core/errors.py`
-	- `src/commands/normalizer.py`
-	- `src/commands/parser.py`
-	- `src/commands/validator.py`
+	- `src/core/logging.py`
+	- `src/command_mapper/normalizer.py`
+	- `src/command_mapper/parser.py`
+	- `src/command_mapper/validator.py`
+	- `src/command_mapper/interfaces.py`
+	- `src/command_mapper/dataclasses.py`
 	- `src/speech/interfaces.py`
 	- `src/speech/keyboard_adapter.py`
 	- `src/speech/offline_vosk_adapter.py`
-	- `src/service/mouse_controller.py`
-	- `src/service/runner.py`
-	- `src/utils/logging.py`
-	- `src/audio/capture.py`
-	- `src/wakeword/detector.py`
+	- `src/speech/wakeword/engine.py`
+	- `src/service/application_runner.py`
+	- `src/service/hardware_controller.py`
+	- `src/service/interfaces.py`
+	- `src/service/dataclasses.py`
 - Create `tests/__init__.py`.
 - Every module created should include a short module docstring. Classes introduced in later specs must include a brief class docstring.
 

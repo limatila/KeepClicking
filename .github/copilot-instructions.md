@@ -20,6 +20,8 @@ The repository must be self-contained. Do not rely on chat history for requireme
 4. [specs/000-status-tracker.md](specs/000-status-tracker.md)
 5. specs/NNN-*.md in ascending numeric order
 
+Non-numeric umbrella specs such as `specs/MVP-package-local-runner.md` are evaluated after the numbered sequence unless a numbered spec explicitly points to them sooner.
+
 If any conflict exists, resolve it by updating the relevant docs or adding an ADR before coding.
 
 ## Product vision and goals
@@ -53,7 +55,7 @@ Isolate platform-specific logic behind adapters or interfaces.
 - PyAutoGUI is the final mouse execution layer. Only the Mouse Controller may import and call it.
 - Do not tightly couple domain logic to PyAutoGUI.
 - Speech recognition must remain adapter-based and replaceable.
-- Prefer offline-first recognition. Priority order: Vosk, Whisper.cpp (or faster-whisper), then native platform APIs.
+- Prefer offline-first recognition. Priority order: Vosk, faster-whisper, then native platform APIs.
 - Cloud speech providers may be documented only as optional adapters, never as a dependency.
 
 The command execution pipeline is fixed:
@@ -68,7 +70,7 @@ All architecture or dependency decisions require an ADR before implementation. I
 
 When evaluating speech recognition or wake-word technology, perform a brief comparison (latency, resource usage, offline viability, licensing) and capture the decision in an ADR. Confirm with the user if the decision diverges from the documented priorities.
 
-The repository is expected to include:
+The repository currently includes or tracks:
 
 - ADRs
 - Product requirements
@@ -85,9 +87,9 @@ The repository is expected to include:
 - Performance policy
 - Observability policy
 - Repository conventions and contribution standards
-- Local repository skills (at minimum: create-spec, monitor-spec, create-adr, implementation-review, performance-review, architecture-review, release-review)
+- Local repository skills (at minimum, but not yet fully implemented: create-spec, monitor-spec, create-adr, implementation-review, performance-review, architecture-review, release-review)
 
-If these artifacts are missing, propose locations and create them before writing code.
+If additional repository intelligence artifacts are needed, propose locations and add them before writing code.
 
 ## Development process
 

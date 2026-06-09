@@ -1,6 +1,6 @@
-# 017 — MVP Package Local Runner
+# 017 — Package Local Runner Preparation
 
-Status: `[COMPLETE]`
+Status: `[INCOMPLETE]`
 
 ## Purpose
 
@@ -52,11 +52,14 @@ pyinstaller --windowed --onefile src
 ## Acceptance criteria
 
 - A fresh setup can install a production package without using a terminal.
-- A dev setup can run a developer runner script without speech dependencies.
+- A dev setup can run the current speech-based developer runner, or a separately wired keyboard-adapter harness for debugging.
 
 ## Manual validation
 
 - Clone into a clean environment and run setup instructions.
+
+Current drift:
+The README documents the intended install paths, but the repository does not yet include the production packaging pipeline or installer outputs described here.
 
 ## Dependencies
 

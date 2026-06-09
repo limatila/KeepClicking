@@ -1,6 +1,6 @@
 # 015 — Add Tests
 
-Status: `[COMPLETE]`
+Status: `[INCOMPLETE]`
 
 ## Purpose
 
@@ -42,25 +42,29 @@ Add automated tests for deterministic layers.
 	- `tests/test_config.py`
 	- `tests/test_mouse_controller.py`
 	- `tests/test_runner.py`
+	- `tests/test_audio_device_resolver.py`
+	- `tests/test_offline_vosk_adapter.py`
+	- `tests/test_wakeword_engine.py`
 - Mock `pyautogui` calls using `unittest.mock` to ensure no real mouse movement.
-- Provide a fake `SpeechAdapter` for runner tests.
+- Provide a fake speech adapter for runner tests.
 
 Pseudo-code summary:
 
 ```text
 def test_parser_click():
-		result = parser.parse("click", config)
-		assert result.command.action == CommandAction.CLICK
+		result = parser.parse("click")
+		assert result.command.action == MouseCommandAction.CLICK
 ```
 
 ## Acceptance criteria
 
-- Tests pass locally.
+- Tests should pass locally from the project virtualenv.
 - No test triggers real mouse movement.
 
 ## Manual validation
 
 - Run the test command and confirm all tests pass.
+- Current drift: the suite exists, but at least one config expectation is out of sync with `.env`, so this step remains incomplete until the tests are brought back to green.
 
 ## Dependencies
 
