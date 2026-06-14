@@ -6,9 +6,7 @@ from typing import Protocol
 
 import numpy as np
 
-import sounddevice
-
-from src.core.errors import AdapterError
+from src.speech.audio_device_resolver import AudioDeviceResolver
 
 
 class SpeechAdapterInterface(Protocol):
@@ -31,44 +29,14 @@ class WakeWordEngineInterface(Protocol):
 class CustumizableAudioInputMixin:
 	"""Mixin to allow custom audio input device resolution for speech adapters."""
 
-	def resolve_audio_input_device_index(self, device_name: str | None) -> int | None:
+	resolver = AudioDeviceResolver()
+
+	def resolve_input_device(self, device_name: str | None) -> int | None:
 		"""Resolve a configured selector to a sounddevice input device index."""
-		if device_name is None:
-			return None
 
-		selector = device_name.strip()
-		if not selector:
-			return None
+		return self.resolver.resolve_input_device(device_name)
 
-		try:
-			device_index = int(selector)
-		except ValueError:
-			device_index = None
-
-		devices = sounddevice.query_devices()
-		available_devices = list(filter(lambda device: device.get("max_input_channels", 0) > 0, devices))
-
-		if device_index is not None:
-			for device_info in available_devices:
-				if device_info.get("index") == device_index:
-					return device_index
-			else:
-				raise AdapterError(f"Audio input device index '{selector}' is not a valid available index")
-
-		selector_lower = selector.lower()
-		for device_info in available_devices:
-			device_name = str(device_info.get("name", ""))
-			if selector_lower in device_name.lower():
-				return device_info.get('index')
-
-		else:
-			devices_listing = [
-				(device.get('index'), device.get('name', '').strip())
-				for device in available_devices
-			]
-			raise AdapterError(f"Audio input device '{selector}' not found. Available devices: {devices_listing}")
-
-	def get_amplitude_stats(self, audio: np.ndarray) -> dict[str, float]:
+	def get_audio_levels(self, audio: np.ndarray) -> dict[str, float]:
 		"""Return simple peak and mean amplitude statistics for captured audio."""
 		abs_audio = np.abs(audio)
 		return {

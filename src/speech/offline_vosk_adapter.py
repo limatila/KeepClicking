@@ -23,7 +23,7 @@ class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface): #!
 		self.sample_rate = 16000
 		self.speech_model = None
 		self.speech_recognizer = None
-		self.device = self.resolve_audio_input_device_index(config.audio_input_device)
+		self.device = self.resolve_input_device(config.audio_input_device)
 
 	def _set_speech_models(self) -> None:
 		if self.speech_recognizer is not None:
@@ -49,7 +49,7 @@ class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface): #!
 		)
 		sounddevice.wait()
 		ADAPTER_LOGGER.info(f"Speech capture listening on device: {self.device}")
-		stats = self.get_amplitude_stats(audio.astype(np.float32) / 32768.0)
+		stats = self.get_audio_levels(audio.astype(np.float32) / 32768.0)
 		ADAPTER_LOGGER.debug(
 			f"Recorded audio amplitude: peak={stats['peak']:.4f}, mean={stats['mean']:.4f}"
 		)

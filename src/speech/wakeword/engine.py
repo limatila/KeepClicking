@@ -32,7 +32,7 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
 		self.chunk_seconds = chunk_seconds
 		self.model: Model = None
 		self.seconds_waiting = 0.0
-		self.device_index = self.resolve_audio_input_device_index(config.audio_input_device)
+		self.device_index = self.resolve_input_device(config.audio_input_device)
 
 	def load_model(self):
 		try:
@@ -92,7 +92,7 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
 			while True:
 				audio, _ = stream.read(frames)
 				score = self.score_frame(model, audio.reshape(-1))
-				stats = self.get_amplitude_stats(audio)
+				stats = self.get_audio_levels(audio)
 
 				ADAPTER_LOGGER.debug(
 					f"[waiting {self.wake_word_phrase}] Listening for {self.seconds_waiting} seconds... Wake-word score: {score:.3f} | "
