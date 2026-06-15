@@ -1,4 +1,5 @@
 import numpy as np
+from pathlib import Path
 
 from src.core.config import get_config
 from src.speech.audio_device_resolver import AudioDeviceResolver
@@ -32,11 +33,57 @@ def test_load_model_uses_configured_model_path(monkeypatch):
     )
 
     engine = OpenWakeWordEngine(config)
+    monkeypatch.setattr(
+        engine,
+        "_resolve_openwakeword_feature_models",
+        lambda: ("/tmp/melspectrogram.onnx", "/tmp/embedding_model.onnx"),
+    )
     model = engine.load_model()
 
     assert isinstance(model, FakeModel)
     assert created_models == [
-        ((), {"wakeword_models": [config.openwakeword_model_path], "inference_framework": "onnx"})
+        (
+            (),
+            {
+                "wakeword_models": [config.openwakeword_model_path],
+                "inference_framework": "onnx",
+                "melspec_model_path": "/tmp/melspectrogram.onnx",
+                "embedding_model_path": "/tmp/embedding_model.onnx",
+            },
+        )
+    ]
+
+
+def test_resolve_openwakeword_feature_models_downloads_missing_assets(monkeypatch, tmp_path):
+    package_root = tmp_path / "package"
+    package_root.mkdir()
+    cache_dir = tmp_path / "cache"
+    created_downloads = []
+
+    class FakeOpenWakeWord:
+        __file__ = str(package_root / "__init__.py")
+        FEATURE_MODELS = {
+            "melspectrogram": {"download_url": "https://example.invalid/melspectrogram.tflite"},
+            "embedding": {"download_url": "https://example.invalid/embedding_model.tflite"},
+        }
+
+    def fake_download(url, target_directory):
+        created_downloads.append((url, target_directory))
+        Path(target_directory, url.rsplit("/", 1)[-1]).write_bytes(b"model")
+
+    monkeypatch.setattr(wakeword_engine, "openwakeword", FakeOpenWakeWord)
+    monkeypatch.setattr(wakeword_engine, "OPENWAKEWORD_MODEL_DIR", package_root / "resources" / "models")
+    monkeypatch.setattr(wakeword_engine, "OPENWAKEWORD_CACHE_DIR", cache_dir)
+    monkeypatch.setattr(wakeword_engine, "download_file", fake_download)
+
+    engine = OpenWakeWordEngine(get_config(audio_input_device=None))
+    melspec_path, embedding_path = engine._resolve_openwakeword_feature_models()
+
+    assert Path(melspec_path) == cache_dir / "melspectrogram.onnx"
+    assert Path(embedding_path) == cache_dir / "embedding_model.onnx"
+    assert created_downloads == [
+        ("https://example.invalid/melspectrogram.onnx", str(cache_dir)),
+        ("https://example.invalid/embedding_model.onnx", str(cache_dir)),
     ]
 
 
