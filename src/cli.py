@@ -39,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
 
     from src.service.application_runner import MouseApplicationRunner
     from src.speech.wakeword.engine import OpenWakeWordEngine
-    from src.speech.offline_vosk_adapter import VoskSpeechAdapter
+    from src.speech.offline_adapters.offline_vosk_adapter import VoskSpeechAdapter
     from src.command_mapper.normalizer import normalize_text
     from src.command_mapper.parser import MouseCommandParser
     from src.command_mapper.validator import MouseCommandValidator

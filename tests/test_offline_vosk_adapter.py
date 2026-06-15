@@ -2,8 +2,8 @@ import numpy as np
 
 from src.core.config import get_config
 from src.speech.audio_device_resolver import AudioDeviceResolver
-import src.speech.offline_vosk_adapter as vosk_adapter
-from src.speech.offline_vosk_adapter import VoskSpeechAdapter
+import src.speech.offline_adapters.offline_vosk_adapter as vosk_adapter
+from src.speech.offline_adapters.offline_vosk_adapter import VoskSpeechAdapter
 
 
 class DummyWakeWordEngine:
