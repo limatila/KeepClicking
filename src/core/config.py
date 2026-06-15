@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from enum import Enum
+from pathlib import Path
 
 from dotenv import get_key
 
+ROOT_PATH = Path(__file__).parent.parent.parent
 ENV_PATH = ".env"
+MODELS_PATH = ROOT_PATH / "src" / "speech" / "wakeword" / "models"
 
 
 def get_env_or_default(key: str, default: str) -> str:
@@ -29,7 +31,7 @@ class AppConfig:
 
     debug_mode: bool = DEBUG_MODE
 
-    openwakeword_model_path: str = get_env_or_default('openwakeword_model_path', "src/speech/wakeword/models/keeper_v1.onnx")
+    openwakeword_model_path: str = get_env_or_default('openwakeword_model_path', MODELS_PATH / "keeper_v1.onnx")
     pyautogui_pause_seconds: float = get_env_or_default('pyautogui_pause_seconds', 0.1)
     pyautogui_failsafe: bool | None = get_key(ENV_PATH, 'pyautogui_failsafe')
     

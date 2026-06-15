@@ -24,13 +24,13 @@ class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface): #!
 		self.speech_model = None
 		self.speech_recognizer = None
 		self.device = self.resolve_input_device(config.audio_input_device)
+		
+		if not self.config.offline_model_path:
+			raise AdapterError("offline_model_path must be configured for Vosk")
 
 	def _set_speech_models(self) -> None:
 		if self.speech_recognizer is not None:
 			return
-
-		if not self.config.offline_model_path:
-			raise AdapterError("offline_model_path must be configured for Vosk")
 
 		self.speech_model = Model(self.config.offline_model_path)
 		self.speech_recognizer = KaldiRecognizer(self.speech_model, self.sample_rate)
