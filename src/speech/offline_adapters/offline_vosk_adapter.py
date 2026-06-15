@@ -14,7 +14,7 @@ from src.core.logging import ADAPTER_LOGGER
 from src.speech.interfaces import SpeechAdapterInterface, WakeWordEngineInterface, CustumizableAudioInputMixin
 
 
-class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface): #! update to more compatible Faster-Whisper in new interface
+class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface): #TODO build faster-whisper adapter, new file
 	"""Vosk-based speech adapter with wake-word gating."""
 
 	def __init__(self, config: AppConfig, wake_word_engine: WakeWordEngineInterface) -> None:
