@@ -9,7 +9,7 @@ from dotenv import get_key
 
 ROOT_PATH = Path(__file__).parent.parent.parent
 ENV_PATH = ".env"
-MODELS_PATH = ROOT_PATH / "src" / "speech" / "wakeword" / "models"
+MODELS_PATH = ROOT_PATH / "src" / "resources" / "models"
 
 
 def get_env_or_default(key: str, default: str) -> str:
@@ -31,7 +31,9 @@ class AppConfig:
 
     debug_mode: bool = DEBUG_MODE
 
-    openwakeword_model_path: str = get_env_or_default('openwakeword_model_path', MODELS_PATH / "keeper_v1.onnx")
+    openwakeword_model_path: str = get_env_or_default('openwakeword_model_path', MODELS_PATH / "wakeword" / "keeper_v1.onnx")
+    offline_model_path: str | None = get_env_or_default('offline_model_path', MODELS_PATH / "vosk" / "vosk-model-small-en-us-0.15")
+    
     pyautogui_pause_seconds: float = get_env_or_default('pyautogui_pause_seconds', 0.1)
     pyautogui_failsafe: bool | None = get_key(ENV_PATH, 'pyautogui_failsafe')
     
@@ -40,7 +42,6 @@ class AppConfig:
     
     keyboard_prompt: str = get_env_or_default('keyboard_prompt', "keepclicking> ")
     
-    offline_model_path: str | None = get_env_or_default('offline_model_path', None)
     wake_word_phrase: str = get_env_or_default('wake_word_phrase', "keeper")
     wake_word_listen_seconds: float = get_env_or_default('wake_word_listen_seconds', 5.0)
     audio_input_device: str | None = get_key(ENV_PATH, 'audio_input_device') #* Can be name or specific index
