@@ -36,7 +36,8 @@ for logger in all_loggers:
         logger.setLevel(DEBUG)
         if logger.name == "baseLogger.core":
             handler.setLevel(DEBUG)
-        elif DEBUG_MODE:
+        
+        if DEBUG_MODE:
             handler.setLevel(DEBUG)
         else:
             handler.setLevel(INFO)
