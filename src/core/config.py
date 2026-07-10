@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import MISSING, dataclass, fields, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, get_args, get_type_hints
 
 from dotenv import dotenv_values
 
@@ -25,16 +25,19 @@ class AppConfig:
     """Defines runtime configuration defaults for the MVP pipeline."""
 
     debug_mode: bool = False
+    audio_input_device: str | None = None
+    
     openwakeword_model_path: str = str(DEFAULT_OPENWAKEWORD_MODEL_PATH)
     offline_model_path: str = str(DEFAULT_OFFLINE_MODEL_PATH)
+    
+    wake_word_phrase: str = "hey keeper"
+    wake_word_listen_seconds: float = 3.0
+    
     pyautogui_pause_seconds: float = 0.1
     pyautogui_failsafe: bool = True
-    mouse_movement_pixels: int = 50
-    mouse_scroll_units: int = 300
-    keyboard_prompt: str = "keepclicking> "
-    wake_word_phrase: str = "keeper"
-    wake_word_listen_seconds: float = 5.0
-    audio_input_device: str | None = None
+    mouse_movement_pixels: int = 200
+    mouse_scroll_units: int = 350
+    
 
     @staticmethod
     def _read_env_values() -> dict[str, str | None]:
@@ -49,125 +52,69 @@ class AppConfig:
         return normalized or None
 
     @classmethod
-    def _get_env_value(
-        cls,
-        key: str,
-        env_values: dict[str, str | None],
-    ) -> str | None:
-        return cls._normalize_env_value(env_values.get(key))
+    def _unwrap_optional_type(cls, annotation: Any) -> Any:
+        non_none_args = [
+            annotation_arg
+            for annotation_arg in get_args(annotation)
+            if annotation_arg is not type(None)
+        ]
+        if len(non_none_args) == 1:
+            return non_none_args[0]
+        return annotation
 
     @classmethod
-    def _parse_bool(
+    def _get_field_default(cls, field_name: str) -> Any:
+        for config_field in fields(cls):
+            if config_field.name != field_name:
+                continue
+
+            if config_field.default is not MISSING:
+                return config_field.default
+            if config_field.default_factory is not MISSING:
+                return config_field.default_factory()
+
+        raise AttributeError(f"Unknown config field '{field_name}'")
+
+    @classmethod
+    def _parse_field_value(
         cls,
-        key: str,
-        default: bool,
+        field_name: str,
+        annotation: Any,
         env_values: dict[str, str | None],
-    ) -> bool:
-        value = cls._get_env_value(key, env_values)
+    ) -> Any:
+        default = cls._get_field_default(field_name)
+        value = cls._normalize_env_value(env_values.get(field_name))
         if value is None:
             return default
-        if value.casefold() in {"1", "true"}:
-            return True
-        if value.casefold() in {"0", "false"}:
-            return False
-        return default
 
-    @classmethod
-    def _parse_int(
-        cls,
-        key: str,
-        default: int,
-        env_values: dict[str, str | None],
-    ) -> int:
-        value = cls._get_env_value(key, env_values)
-        if value is None:
+        field_type = cls._unwrap_optional_type(annotation)
+        if field_type is str:
+            return value
+        if field_type is bool:
+            if value.casefold() in {"1", "true"}:
+                return True
+            if value.casefold() in {"0", "false"}:
+                return False
             return default
 
         try:
-            return int(value)
-        except ValueError:
+            return field_type(value)
+        except (TypeError, ValueError):
             return default
-
-    @classmethod
-    def _parse_float(
-        cls,
-        key: str,
-        default: float,
-        env_values: dict[str, str | None],
-    ) -> float:
-        value = cls._get_env_value(key, env_values)
-        if value is None:
-            return default
-
-        try:
-            return float(value)
-        except ValueError:
-            return default
-
-    @classmethod
-    def _parse_str(
-        cls,
-        key: str,
-        default: str,
-        env_values: dict[str, str | None],
-    ) -> str:
-        return cls._get_env_value(key, env_values) or default
 
     @classmethod
     def from_env(cls) -> AppConfig:
         env_values = cls._read_env_values()
-        return cls(
-            debug_mode=cls._parse_bool("debug_mode", False, env_values),
-            openwakeword_model_path=cls._parse_str(
-                "openwakeword_model_path",
-                str(DEFAULT_OPENWAKEWORD_MODEL_PATH),
+        field_types = get_type_hints(cls)
+        parsed_values = {
+            field_name: cls._parse_field_value(
+                field_name,
+                field_types[field_name],
                 env_values,
-            ),
-            offline_model_path=cls._parse_str(
-                "offline_model_path",
-                str(DEFAULT_OFFLINE_MODEL_PATH),
-                env_values,
-            ),
-            pyautogui_pause_seconds=cls._parse_float(
-                "pyautogui_pause_seconds",
-                0.1,
-                env_values,
-            ),
-            pyautogui_failsafe=cls._parse_bool(
-                "pyautogui_failsafe",
-                True,
-                env_values,
-            ),
-            mouse_movement_pixels=cls._parse_int(
-                "mouse_movement_pixels",
-                50,
-                env_values,
-            ),
-            mouse_scroll_units=cls._parse_int(
-                "mouse_scroll_units",
-                300,
-                env_values,
-            ),
-            keyboard_prompt=cls._parse_str(
-                "keyboard_prompt",
-                "keepclicking> ",
-                env_values,
-            ),
-            wake_word_phrase=cls._parse_str(
-                "wake_word_phrase",
-                "keeper",
-                env_values,
-            ),
-            wake_word_listen_seconds=cls._parse_float(
-                "wake_word_listen_seconds",
-                5.0,
-                env_values,
-            ),
-            audio_input_device=cls._get_env_value(
-                "audio_input_device",
-                env_values,
-            ),
-        )
+            )
+            for field_name in field_types
+        }
+        return cls(**parsed_values)
 
 
 DEBUG_MODE = AppConfig.from_env().debug_mode
@@ -176,7 +123,7 @@ DEBUG_MODE = AppConfig.from_env().debug_mode
 def get_env_or_default(key: str, default: Any) -> Any:
     """Return a raw environment value when present, else the provided default."""
     env_values = AppConfig._read_env_values()
-    return AppConfig._get_env_value(key, env_values) or default
+    return AppConfig._normalize_env_value(env_values.get(key)) or default
 
 
 def get_config(base: AppConfig | None = None, **overrides: object) -> AppConfig:
