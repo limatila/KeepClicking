@@ -19,7 +19,10 @@ def resolve_audio_input_device(device_name: str | None) -> int | None:
 
 def test_load_model_uses_configured_model_path(monkeypatch):
     created_models = []
-    config = get_config(openwakeword_model_path="/tmp/custom_wakeword.onnx", audio_input_device=None)
+    config = get_config(
+        openwakeword_model_path="/tmp/custom_wakeword.onnx",
+        audio_input_device=None,
+    )
 
     class FakeModel:
         def __init__(self, *args, **kwargs):
@@ -54,7 +57,10 @@ def test_load_model_uses_configured_model_path(monkeypatch):
     ]
 
 
-def test_resolve_openwakeword_feature_models_downloads_missing_assets(monkeypatch, tmp_path):
+def test_resolve_openwakeword_feature_models_downloads_missing_assets(
+    monkeypatch,
+    tmp_path,
+):
     package_root = tmp_path / "package"
     package_root.mkdir()
     cache_dir = tmp_path / "cache"
@@ -63,8 +69,12 @@ def test_resolve_openwakeword_feature_models_downloads_missing_assets(monkeypatc
     class FakeOpenWakeWord:
         __file__ = str(package_root / "__init__.py")
         FEATURE_MODELS = {
-            "melspectrogram": {"download_url": "https://example.invalid/melspectrogram.tflite"},
-            "embedding": {"download_url": "https://example.invalid/embedding_model.tflite"},
+            "melspectrogram": {
+                "download_url": "https://example.invalid/melspectrogram.tflite"
+            },
+            "embedding": {
+                "download_url": "https://example.invalid/embedding_model.tflite"
+            },
         }
 
     def fake_download(url, target_directory):
@@ -72,7 +82,11 @@ def test_resolve_openwakeword_feature_models_downloads_missing_assets(monkeypatc
         Path(target_directory, url.rsplit("/", 1)[-1]).write_bytes(b"model")
 
     monkeypatch.setattr(wakeword_engine, "openwakeword", FakeOpenWakeWord)
-    monkeypatch.setattr(wakeword_engine, "OPENWAKEWORD_MODEL_DIR", package_root / "resources" / "models")
+    monkeypatch.setattr(
+        wakeword_engine,
+        "OPENWAKEWORD_MODEL_DIR",
+        package_root / "resources" / "models",
+    )
     monkeypatch.setattr(wakeword_engine, "OPENWAKEWORD_CACHE_DIR", cache_dir)
     monkeypatch.setattr(wakeword_engine, "download_file", fake_download)
 
@@ -88,8 +102,17 @@ def test_resolve_openwakeword_feature_models_downloads_missing_assets(monkeypatc
 
 
 def test_wait_for_wake_word_reuses_one_input_stream(monkeypatch):
-    config = get_config(wake_word_phrase="keeper", openwakeword_model_path="/tmp/custom_wakeword.onnx", audio_input_device=None)
-    engine = OpenWakeWordEngine(config, threshold=0.5, sample_rate=16000, chunk_seconds=0.25)
+    config = get_config(
+        wake_word_phrase="keeper",
+        openwakeword_model_path="/tmp/custom_wakeword.onnx",
+        audio_input_device=None,
+    )
+    engine = OpenWakeWordEngine(
+        config,
+        threshold=0.5,
+        sample_rate=16000,
+        chunk_seconds=0.25,
+    )
 
     class FakeModel:
         def __init__(self):
@@ -134,14 +157,23 @@ def test_wait_for_wake_word_passes_device_to_input_stream(monkeypatch):
             {"name": "USB 2.0 Microphone", "max_input_channels": 2},
         ],
     )
-    monkeypatch.setattr(AudioDeviceResolver, "_query_hostapis_safe", lambda self: [])
+    monkeypatch.setattr(
+        AudioDeviceResolver,
+        "_query_hostapis_safe",
+        lambda self: [],
+    )
     monkeypatch.setattr(AudioDeviceResolver, "_load_alsa_cards", lambda self: {})
     config = get_config(
         wake_word_phrase="keeper",
         openwakeword_model_path="/tmp/custom_wakeword.onnx",
         audio_input_device="USB 2.0",
     )
-    engine = OpenWakeWordEngine(config, threshold=0.5, sample_rate=16000, chunk_seconds=0.25)
+    engine = OpenWakeWordEngine(
+        config,
+        threshold=0.5,
+        sample_rate=16000,
+        chunk_seconds=0.25,
+    )
 
     class FakeModel:
         def __init__(self):
@@ -183,19 +215,30 @@ def test_resolve_audio_input_device_substring(monkeypatch):
             {"name": "USB 2.0 Microphone", "max_input_channels": 2},
         ],
     )
-    monkeypatch.setattr(AudioDeviceResolver, "_query_hostapis_safe", lambda self: [])
+    monkeypatch.setattr(
+        AudioDeviceResolver,
+        "_query_hostapis_safe",
+        lambda self: [],
+    )
     monkeypatch.setattr(AudioDeviceResolver, "_load_alsa_cards", lambda self: {})
 
     assert resolve_audio_input_device("USB 2.0") == 1
 
 
-def test_wait_for_wake_word_uses_default_device_when_config_is_unset(monkeypatch):
+def test_wait_for_wake_word_uses_default_device_when_config_is_unset(
+    monkeypatch,
+):
     config = get_config(
         wake_word_phrase="keeper",
         openwakeword_model_path="/tmp/custom_wakeword.onnx",
         audio_input_device=None,
     )
-    engine = OpenWakeWordEngine(config, threshold=0.5, sample_rate=16000, chunk_seconds=0.25)
+    engine = OpenWakeWordEngine(
+        config,
+        threshold=0.5,
+        sample_rate=16000,
+        chunk_seconds=0.25,
+    )
 
     class FakeModel:
         def predict(self, audio_frame):

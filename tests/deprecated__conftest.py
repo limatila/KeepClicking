@@ -7,19 +7,19 @@ import sys
 # Set up virtual display BEFORE any imports that need X11
 try:
     from pyvirtualdisplay import Display
-    
+
     # Check if we're in a headless environment (no DISPLAY set or invalid)
     if not os.environ.get("DISPLAY"):
         _display = Display(visible=False, size=(1280, 1024))
         _display.start()
-        
+
         # Register cleanup at exit
         def cleanup_display():
             try:
                 _display.stop()
             except:
                 pass
-        
+
         import atexit
         atexit.register(cleanup_display)
 except ImportError:
