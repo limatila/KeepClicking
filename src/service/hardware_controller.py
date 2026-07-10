@@ -33,16 +33,16 @@ class PyAutoGuiMouseController(Controller):
 
     def move_cursor(self, command: MouseCommand):
         if command.direction == CommandDirection.UP:
-            pag.moveRel(0, -command.amount)
+            pag.moveRel(0, -command.amount, duration=0.2)
         
         if command.direction == CommandDirection.DOWN:
-            pag.moveRel(0, command.amount)
+            pag.moveRel(0, command.amount, duration=0.2)
         
         if command.direction == CommandDirection.LEFT:
-            pag.moveRel(-command.amount, 0)
+            pag.moveRel(-command.amount, 0, duration=0.2)
         
         if command.direction == CommandDirection.RIGHT:
-            pag.moveRel(command.amount, 0)
+            pag.moveRel(command.amount, 0, duration=0.2)
 
     def execute(self, command: MouseCommand, config: AppConfig) -> MouseExecutionResult:
         self.stopped = False
