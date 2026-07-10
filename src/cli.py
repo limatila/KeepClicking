@@ -1,4 +1,4 @@
-"""Dev-ambient CLI runner for testing and development."""
+"""CLI runner for the KeepClicking voice pipeline."""
 
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ APP_CONFIG = get_config(debug_mode=True)
 
 
 def _build_argument_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="KeepClicking development runner")
-    
+    parser = argparse.ArgumentParser(description="KeepClicking CLI runner")
+
     parser.add_argument(
         "--list-audio-devices",
         action="store_true",
@@ -24,7 +24,7 @@ def _build_argument_parser() -> argparse.ArgumentParser:
 
 def list_audio_devices() -> int:
     from src.speech.audio_device_resolver import AudioDeviceResolver
-    
+
     devices_resolver = AudioDeviceResolver()
     devices_resolver.list_cli_input_devices()
 
@@ -33,7 +33,7 @@ def list_audio_devices() -> int:
 
 def main(argv: list[str] | None = None) -> int:
     args = _build_argument_parser().parse_args(argv)
-    
+
     if args.list_audio_devices:
         return list_audio_devices()
 
@@ -46,7 +46,7 @@ def main(argv: list[str] | None = None) -> int:
     from src.service.hardware_controller import PyAutoGuiMouseController
 
     CORE_LOGGER.info("![DEV] Starting KeepClicking CLI runner...\n")
-    
+
     runner = MouseApplicationRunner(
         adapter=VoskSpeechAdapter(
             APP_CONFIG, OpenWakeWordEngine(APP_CONFIG)
