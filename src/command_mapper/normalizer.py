@@ -4,8 +4,12 @@ from __future__ import annotations
 
 import re
 
-SYNONYM_MAP: dict[str, str] = {
+TOKEN_SYNONYM_MAP: dict[str, str] = {
     "clique": "click",
+    "clicks": "click",
+    "doubleclick": "double click",
+    "the were click": "double click",
+    "rightclick": "right click",
 }
 
 
@@ -20,4 +24,10 @@ def normalize_text(raw_text: str) -> str:
     text = re.sub(r"[^a-z0-9 ]+", "", text)
     text = re.sub(r"\s+", " ", text).strip()
 
-    return SYNONYM_MAP.get(text, text)
+    normalized_tokens: list[str] = []
+    for token in text.split():
+        normalized_tokens.extend(
+            TOKEN_SYNONYM_MAP.get(token, token).split()
+        )
+
+    return " ".join(normalized_tokens)

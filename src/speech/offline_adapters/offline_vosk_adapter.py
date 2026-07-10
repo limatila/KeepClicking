@@ -32,13 +32,36 @@ class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface):
         if not self.config.offline_model_path:
             raise AdapterError("offline_model_path must be configured for Vosk")
 
+    def _build_command_grammar(self) -> str:
+        command_phrases = [
+            "click",
+            "double click",
+            "two click",
+            "too click",
+            "to click",
+            "right click",
+            "scroll up",
+            "scroll down",
+            "move up",
+            "move down",
+            "move left",
+            "move right",
+            "mouse up",
+            "mouse down",
+            "mouse left",
+            "mouse right",
+            "stop",
+            "[unk]",
+        ]
+        return json.dumps(command_phrases)
+
     def _set_speech_models(self) -> None:
         if self.speech_recognizer is not None:
             return
 
         self.speech_model = Model(self.config.offline_model_path)
         self.speech_recognizer = KaldiRecognizer(
-            self.speech_model, self.sample_rate
+            self.speech_model, self.sample_rate, self._build_command_grammar()
         )
 
     def _record_audio(self) -> bytes:
@@ -83,8 +106,12 @@ class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface):
             else:
                 result_json = recognizer.FinalResult()
 
+            ADAPTER_LOGGER.debug("Raw Vosk recognition result: %s", result_json)
+
             try:
-                return json.loads(result_json).get("text", "")
+                recognized_text = json.loads(result_json).get("text", "")
+                ADAPTER_LOGGER.debug("Recognized command text: %s", recognized_text)
+                return recognized_text
             except json.JSONDecodeError:
                 return ""
         except AdapterError:

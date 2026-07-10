@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import time
-
 import pyautogui as pag
 
 from src.core.dataclasses import MouseCommand
@@ -23,12 +21,8 @@ class PyAutoGuiMouseController(Controller):
         self.error = None
 
     def click(self, times: int = 1, right_click: bool = False):
-        for _ in range(times):
-            if right_click:
-                pag.rightClick()
-            else:
-                pag.click()
-            time.sleep(0.05)
+        button_side = "right" if right_click else "primary"
+        pag.click(clicks=times, interval=0.05, button=button_side)
 
     def scroll(self, command: MouseCommand):
         if command.direction == CommandDirection.UP:

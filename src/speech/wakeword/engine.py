@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import numpy as np
 import openwakeword
 import sounddevice
 from openwakeword import Model
@@ -29,7 +30,7 @@ OPENWAKEWORD_CACHE_DIR = (
 class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
     """OpenWakeWord-based wake-word detector."""
 
-    def __init__(self, config: AppConfig, threshold: float = 0.5, sample_rate: int = 16000, chunk_seconds: float = 0.5):
+    def __init__(self, config: AppConfig, threshold: float = 0.2, sample_rate: int = 16000, chunk_seconds: float = 0.5):
         self.wake_word_phrase = config.wake_word_phrase
         self.model_path = str(config.openwakeword_model_path)
         self.threshold = threshold
@@ -95,6 +96,13 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
                 melspec_model_path, embedding_model_path = (
                     self._resolve_openwakeword_feature_models()
                 )
+                ADAPTER_LOGGER.info(
+                    "Loading wake-word model from '%s' with support assets "
+                    "'%s' and '%s'.",
+                    self.model_path,
+                    melspec_model_path,
+                    embedding_model_path,
+                )
                 self.model = Model(
                     wakeword_models=[self.model_path],
                     inference_framework="onnx",
@@ -109,23 +117,49 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
                 "OpenWakeWord model initialization failed"
             ) from err
 
-    def score_frame(self, model: Model, audio_frame) -> float:
-        if hasattr(model, "predict"):
-            scores = model.predict(audio_frame)
-        elif hasattr(model, "infer"):
-            scores = model.infer(audio_frame)
-        else:
-            raise AdapterError("OpenWakeWord model lacks a predict interface")
+    def _prepare_model_audio_frame(self, audio: np.ndarray) -> np.ndarray:
+        audio_frame = np.asarray(audio, dtype=np.float32).reshape(-1)
+        audio_frame = np.clip(audio_frame, -1.0, 1.0)
+        return (audio_frame * 32767.0).astype(np.int16)
 
+    def _predict_scores(self, model: Model, audio_frame: np.ndarray):
+        if hasattr(model, "predict"):
+            return model.predict(audio_frame)
+        if hasattr(model, "infer"):
+            return model.infer(audio_frame)
+        raise AdapterError("OpenWakeWord model lacks a predict interface")
+
+    def _extract_score(self, scores) -> float:
         if isinstance(scores, dict):
             return max(scores.values(), default=0.0)
-        if isinstance(scores, (list, tuple)):
-            return max(scores) if scores else 0.0
+        if isinstance(scores, (list, tuple, np.ndarray)):
+            if len(scores) == 0:
+                return 0.0
+            try:
+                return float(np.max(scores))
+            except (TypeError, ValueError):
+                return 0.0
 
         try:
             return float(scores)
         except (TypeError, ValueError):
             return 0.0
+
+    def _format_score_details(self, scores) -> str:
+        if isinstance(scores, dict):
+            formatted_scores = []
+            for label, value in scores.items():
+                try:
+                    formatted_scores.append(f"{label}={float(value):.3f}")
+                except (TypeError, ValueError):
+                    formatted_scores.append(f"{label}={value!r}")
+            return ", ".join(formatted_scores)
+
+        return repr(scores)
+
+    def score_frame(self, model: Model, audio_frame: np.ndarray) -> float:
+        scores = self._predict_scores(model, audio_frame)
+        return self._extract_score(scores)
 
     def wait_for_wake_word(self) -> bool:
         model = self.load_model()
@@ -140,25 +174,44 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
             blocksize=frames,
             device=self.device_index,
         ) as stream:
-            ADAPTER_LOGGER.info(f"Wake-word engine listening on device: {self.device_index}")
+            ADAPTER_LOGGER.info(
+                "Wake-word engine listening on device: %s | model=%s | "
+                "threshold=%.3f",
+                self.device_index,
+                self.model_path,
+                self.threshold,
+            )
             
             while True:
                 audio, _ = stream.read(frames)
-                score = self.score_frame(model, audio.reshape(-1))
-                stats = self.get_audio_levels(audio)
+                model_audio_frame = self._prepare_model_audio_frame(audio)
+                scores = self._predict_scores(model, model_audio_frame)
+                score = self._extract_score(scores)
+                mic_stats = self.get_audio_levels(audio)
+                model_frame_stats = self.get_audio_levels(
+                    model_audio_frame.astype(np.float32) / 32767.0
+                )
                 ADAPTER_LOGGER.debug(
                     "[waiting %s] Listening for %s seconds... Wake-word "
-                    "score: %.3f | Amplitude peak=%.4f, mean=%.4f",
+                    "score: %.3f | Mic amplitude peak=%.4f, mean=%.4f | "
+                    "Model frame dtype=%s, peak=%.4f, mean=%.4f",
                     self.wake_word_phrase,
                     self.seconds_waiting,
                     score,
-                    stats["peak"],
-                    stats["mean"],
+                    mic_stats["peak"],
+                    mic_stats["mean"],
+                    model_audio_frame.dtype,
+                    model_frame_stats["peak"],
+                    model_frame_stats["mean"],
                 )
+                if isinstance(scores, dict):
+                    ADAPTER_LOGGER.debug(
+                        f"Wake-word raw scores: {self._format_score_details(scores)}",
+                    )
                 self.seconds_waiting += self.chunk_seconds
 
                 if score >= self.threshold:
                     self.seconds_waiting = 0.0
-                    ADAPTER_LOGGER.info("Wake-word '{self.wake_word_phrase}' detected!")
+                    ADAPTER_LOGGER.info(f"Wake-word '{self.wake_word_phrase}' detected!")
                     
                     return True
