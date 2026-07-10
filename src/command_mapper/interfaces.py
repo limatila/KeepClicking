@@ -22,6 +22,7 @@ class CommandValidator:
         raise NotImplementedError("validations_listing list must be implemented by subclasses")
 
     def validate(self, command: BaseCommand) -> ValidationResult:
+        self.error = None
         self.command = command
 
         for rule in self.validations_listing:

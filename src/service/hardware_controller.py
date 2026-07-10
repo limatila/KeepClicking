@@ -51,6 +51,9 @@ class PyAutoGuiMouseController(Controller):
             pag.moveRel(command.amount, 0)
 
     def execute(self, command: MouseCommand, config: AppConfig) -> MouseExecutionResult:
+        self.stopped = False
+        self.error = None
+
         pag.PAUSE = config.pyautogui_pause_seconds
         pag.FAILSAFE = config.pyautogui_failsafe
 

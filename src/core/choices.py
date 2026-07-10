@@ -24,6 +24,30 @@ class MouseCommandAction(BaseCommandAction):
     SCROLL = "scroll"
     MOVE = "move"
 
+    @classmethod
+    def ordered_text_matchers(cls) -> list[tuple[str, "MouseCommandAction"]]:
+        return [
+            ("double click", cls.DOUBLE_CLICK),
+            ("right click", cls.RIGHT_CLICK),
+            ("scroll", cls.SCROLL),
+            ("move", cls.MOVE),
+            ("stop", cls.STOP),
+            ("click", cls.CLICK),
+        ]
+
+    @classmethod
+    def get_choice_by_text(cls, text: str) -> "MouseCommandAction | None":
+        normalized_text = text.strip().lower()
+
+        for action_text, action_choice in cls.ordered_text_matchers():
+            if action_text in normalized_text:
+                return action_choice
+
+        return None
+
+    def requires_direction(self) -> bool:
+        return self in (self.MOVE, self.SCROLL)
+
 
 class CommandDirection(BaseChoice):
     """Supported directions for scroll and move commands."""
