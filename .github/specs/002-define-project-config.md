@@ -44,7 +44,6 @@ Define runtime configuration defaults for movement, scrolling, wake-word behavio
 	- `pyautogui_failsafe: bool | None`
 	- `wake_word_phrase: str = "keeper"`
 	- `wake_word_listen_seconds: float = 5.0`
-	- `keyboard_prompt: str = "keepclicking> "`
 	- `offline_model_path: str | None = None`
 	- `audio_input_device: str | None = None`
 - Provide `get_env_or_default(key: str, default: str) -> str` for `.env`-backed values.

@@ -141,7 +141,6 @@ This section is based on `src/core/config.py` and cross-checked against the test
 | `pyautogui_failsafe` | `True` | Keeps PyAutoGUI fail-safe protection enabled unless explicitly disabled. |
 | `mouse_movement_pixels` | `50` | Controls how far each `move <direction>` command moves the cursor. |
 | `mouse_scroll_units` | `300` | Controls how far each `scroll up/down` command scrolls. |
-| `keyboard_prompt` | `keepclicking> ` | Present in config, but not used by the current voice CLI path. |
 | `wake_word_phrase` | `keeper` | Changes the expected activation phrase in logs/config. In practice, wake-word detection still depends on the model selected by `openwakeword_model_path`, so these two settings should stay aligned. |
 | `wake_word_listen_seconds` | `5.0` | Controls how long the CLI records audio after wake-word detection. Shorter values may cut commands off; longer values capture more silence before transcription completes. |
 | `audio_input_device` | `None` | Chooses the microphone. Leave unset to use the system default input device. You can also set a numeric index or a fuzzy device name such as `USB 2.0`. |
