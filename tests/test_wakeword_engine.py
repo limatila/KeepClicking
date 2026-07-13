@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 from pathlib import Path
 
@@ -57,6 +58,43 @@ def test_load_model_uses_configured_model_path(monkeypatch):
     ]
 
 
+def test_load_model_logs_effective_model_and_support_assets(monkeypatch, caplog):
+    created_models = []
+    config = get_config(
+        openwakeword_model_path="/tmp/custom_wakeword.onnx",
+        audio_input_device=None,
+    )
+
+    class FakeModel:
+        def __init__(self, *args, **kwargs):
+            created_models.append((args, kwargs))
+
+    monkeypatch.setattr(wakeword_engine, "Model", FakeModel)
+    monkeypatch.setattr(
+        wakeword_engine.os.path,
+        "exists",
+        lambda path: path == config.openwakeword_model_path,
+    )
+
+    engine = OpenWakeWordEngine(config)
+    monkeypatch.setattr(
+        engine,
+        "_resolve_openwakeword_feature_models",
+        lambda: ("/tmp/melspectrogram.onnx", "/tmp/embedding_model.onnx"),
+    )
+
+    with caplog.at_level(logging.INFO, logger="baseLogger.adapter"):
+        engine.load_model()
+
+    assert created_models
+    assert any(
+        "Loading wake-word model from '/tmp/custom_wakeword.onnx'" in record.message
+        and "/tmp/melspectrogram.onnx" in record.message
+        and "/tmp/embedding_model.onnx" in record.message
+        for record in caplog.records
+    )
+
+
 def test_resolve_openwakeword_feature_models_downloads_missing_assets(
     monkeypatch,
     tmp_path,
@@ -101,6 +139,30 @@ def test_resolve_openwakeword_feature_models_downloads_missing_assets(
     ]
 
 
+def test_prepare_model_audio_frame_converts_float32_to_int16():
+    engine = OpenWakeWordEngine(get_config(audio_input_device=None))
+
+    audio = np.array([[-1.2], [0.0], [1.2]], dtype=np.float32)
+
+    prepared = engine._prepare_model_audio_frame(audio)
+
+    assert prepared.dtype == np.int16
+    assert prepared.shape == (3,)
+    assert prepared.tolist() == [-32767, 0, 32767]
+
+
+def test_score_frame_returns_max_score_from_dict():
+    engine = OpenWakeWordEngine(get_config(audio_input_device=None))
+
+    class FakeModel:
+        def predict(self, audio_frame):
+            return {"keeper": 0.1, "hey_keeper_v2": 0.8}
+
+    score = engine.score_frame(FakeModel(), np.zeros(1280, dtype=np.int16))
+
+    assert score == 0.8
+
+
 def test_wait_for_wake_word_reuses_one_input_stream(monkeypatch):
     config = get_config(
         wake_word_phrase="keeper",
@@ -117,9 +179,11 @@ def test_wait_for_wake_word_reuses_one_input_stream(monkeypatch):
     class FakeModel:
         def __init__(self):
             self.calls = 0
+            self.audio_frames = []
 
         def predict(self, audio_frame):
             self.calls += 1
+            self.audio_frames.append(audio_frame.copy())
             return 0.1 if self.calls == 1 else 0.9
 
     class FakeInputStream:
@@ -176,11 +240,14 @@ def test_wait_for_wake_word_passes_device_to_input_stream(monkeypatch):
     )
 
     class FakeModel:
+        last_audio_frame = None
+
         def __init__(self):
             self.calls = 0
 
         def predict(self, audio_frame):
             self.calls += 1
+            FakeModel.last_audio_frame = audio_frame.copy()
             return 0.9
 
     class FakeInputStream:
@@ -205,6 +272,9 @@ def test_wait_for_wake_word_passes_device_to_input_stream(monkeypatch):
     assert engine.wait_for_wake_word() is True
     assert FakeInputStream.kwargs_seen is not None
     assert FakeInputStream.kwargs_seen["device"] == 1
+    assert FakeModel.last_audio_frame is not None
+    assert FakeModel.last_audio_frame.dtype == np.int16
+    assert FakeModel.last_audio_frame.ndim == 1
 
 
 def test_resolve_audio_input_device_substring(monkeypatch):
@@ -264,3 +334,46 @@ def test_wait_for_wake_word_uses_default_device_when_config_is_unset(
 
     assert engine.wait_for_wake_word() is True
     assert FakeInputStream.kwargs_seen["device"] is None
+
+
+def test_wait_for_wake_word_logs_raw_dict_scores(monkeypatch, caplog):
+    config = get_config(
+        wake_word_phrase="hey keeper",
+        openwakeword_model_path="/tmp/custom_wakeword.onnx",
+        audio_input_device=None,
+    )
+    engine = OpenWakeWordEngine(
+        config,
+        threshold=0.5,
+        sample_rate=16000,
+        chunk_seconds=0.25,
+    )
+
+    class FakeModel:
+        def predict(self, audio_frame):
+            return {"hey_keeper_v2": 0.9, "keeper": 0.1}
+
+    class FakeInputStream:
+        def __init__(self, *args, **kwargs):
+            self.blocksize = kwargs["blocksize"]
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self, frames):
+            return np.zeros((frames, 1), dtype=np.float32), False
+
+    monkeypatch.setattr(engine, "load_model", lambda: FakeModel())
+    monkeypatch.setattr(wakeword_engine.sounddevice, "InputStream", FakeInputStream)
+
+    with caplog.at_level(logging.DEBUG, logger="baseLogger.adapter"):
+        assert engine.wait_for_wake_word() is True
+
+    assert any("Wake-word raw scores:" in record.message for record in caplog.records)
+    assert any(
+        "Wake-word 'hey keeper' detected!" in record.message
+        for record in caplog.records
+    )

@@ -22,10 +22,52 @@ def test_parse_move_right():
     assert result.command.direction == CommandDirection.RIGHT
 
 
+def test_parse_mouse_up_as_move_up():
+    parser = MouseCommandParser()
+
+    result = parser.parse("mouse up")
+
+    assert result.command is not None
+    assert result.command.action == MouseCommandAction.MOVE
+    assert result.command.direction == CommandDirection.UP
+    assert result.error is None
+
+
+def test_parse_noisy_mouse_up_as_move_up():
+    parser = MouseCommandParser()
+
+    result = parser.parse("a mouse up")
+
+    assert result.command is not None
+    assert result.command.action == MouseCommandAction.MOVE
+    assert result.command.direction == CommandDirection.UP
+    assert result.error is None
+
+
 def test_parse_double_click_without_matching_click_first():
     parser = MouseCommandParser()
 
     result = parser.parse("double click")
+
+    assert result.command is not None
+    assert result.command.action == MouseCommandAction.DOUBLE_CLICK
+    assert result.error is None
+
+
+def test_parse_noisy_double_click():
+    parser = MouseCommandParser()
+
+    result = parser.parse("please double click now")
+
+    assert result.command is not None
+    assert result.command.action == MouseCommandAction.DOUBLE_CLICK
+    assert result.error is None
+
+
+def test_parse_two_click_as_double_click():
+    parser = MouseCommandParser()
+
+    result = parser.parse("two click")
 
     assert result.command is not None
     assert result.command.action == MouseCommandAction.DOUBLE_CLICK
@@ -45,7 +87,7 @@ def test_parse_right_click():
 def test_parse_scroll_down():
     parser = MouseCommandParser()
 
-    result = parser.parse("scroll down")
+    result = parser.parse("please scroll down now")
 
     assert result.command is not None
     assert result.command.action == MouseCommandAction.SCROLL

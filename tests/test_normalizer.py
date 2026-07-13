@@ -11,3 +11,7 @@ def test_normalize_double_click():
 
 def test_normalize_synonym():
     assert normalize_text("clique") == "click"
+
+
+def test_normalize_doubleclick_token():
+    assert normalize_text("doubleclick") == "double click"

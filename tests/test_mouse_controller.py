@@ -8,8 +8,8 @@ import src.service.hardware_controller as mouse_controller_service
 def test_mouse_controller_click(monkeypatch):
     calls = []
 
-    def fake_click():
-        calls.append("click")
+    def fake_click(*args, **kwargs):
+        calls.append(kwargs)
 
     monkeypatch.setattr(mouse_controller_service.pag, "click", fake_click)
 
@@ -18,20 +18,41 @@ def test_mouse_controller_click(monkeypatch):
 
     result = controller.execute(MouseCommand(action=MouseCommandAction.CLICK), config)
 
-    assert calls == ["click"]
+    assert calls == [{"clicks": 1, "interval": 0.05, "button": "primary"}]
     assert result.stopped is False
     assert result.error is None
     assert mouse_controller_service.pag.PAUSE == config.pyautogui_pause_seconds
     assert mouse_controller_service.pag.FAILSAFE == config.pyautogui_failsafe
 
 
+def test_mouse_controller_double_click(monkeypatch):
+    calls = []
+
+    def fake_click(*args, **kwargs):
+        calls.append(kwargs)
+
+    monkeypatch.setattr(mouse_controller_service.pag, "click", fake_click)
+
+    controller = mouse_controller_service.PyAutoGuiMouseController()
+    config = get_config()
+
+    result = controller.execute(
+        MouseCommand(action=MouseCommandAction.DOUBLE_CLICK),
+        config,
+    )
+
+    assert calls == [{"clicks": 2, "interval": 0.05, "button": "primary"}]
+    assert result.stopped is False
+    assert result.error is None
+
+
 def test_mouse_controller_right_click(monkeypatch):
     calls = []
 
-    def fake_right_click():
-        calls.append("right_click")
+    def fake_click(*args, **kwargs):
+        calls.append(kwargs)
 
-    monkeypatch.setattr(mouse_controller_service.pag, "rightClick", fake_right_click)
+    monkeypatch.setattr(mouse_controller_service.pag, "click", fake_click)
 
     controller = mouse_controller_service.PyAutoGuiMouseController()
     config = get_config()
@@ -41,7 +62,7 @@ def test_mouse_controller_right_click(monkeypatch):
         config,
     )
 
-    assert calls == ["right_click"]
+    assert calls == [{"clicks": 1, "interval": 0.05, "button": "right"}]
     assert result.stopped is False
     assert result.error is None
 
@@ -84,8 +105,8 @@ def test_mouse_controller_stop():
 def test_mouse_controller_does_not_keep_stop_state(monkeypatch):
     calls = []
 
-    def fake_click():
-        calls.append("click")
+    def fake_click(*args, **kwargs):
+        calls.append(kwargs)
 
     monkeypatch.setattr(mouse_controller_service.pag, "click", fake_click)
 
@@ -98,4 +119,4 @@ def test_mouse_controller_does_not_keep_stop_state(monkeypatch):
     assert stopped.stopped is True
     assert clicked.stopped is False
     assert clicked.error is None
-    assert calls == ["click"]
+    assert calls == [{"clicks": 1, "interval": 0.05, "button": "primary"}]

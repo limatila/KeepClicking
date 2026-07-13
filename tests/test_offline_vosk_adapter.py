@@ -1,3 +1,4 @@
+import json
 import numpy as np
 
 from src.core.config import get_config
@@ -9,6 +10,33 @@ from src.speech.offline_adapters.offline_vosk_adapter import VoskSpeechAdapter
 class DummyWakeWordEngine:
     def wait_for_wake_word(self):
         return True
+
+
+def test_set_speech_models_uses_command_grammar(monkeypatch):
+    config = get_config(audio_input_device=None, offline_model_path="/tmp/model")
+    adapter = VoskSpeechAdapter(config, DummyWakeWordEngine())
+    recognizer_args = {}
+
+    class FakeModel:
+        def __init__(self, model_path):
+            recognizer_args["model_path"] = model_path
+
+    class FakeRecognizer:
+        def __init__(self, model, sample_rate, grammar):
+            recognizer_args["sample_rate"] = sample_rate
+            recognizer_args["grammar"] = grammar
+
+    monkeypatch.setattr(vosk_adapter, "Model", FakeModel)
+    monkeypatch.setattr(vosk_adapter, "KaldiRecognizer", FakeRecognizer)
+
+    adapter._set_speech_models()
+    parsed_grammar = json.loads(recognizer_args["grammar"])
+
+    assert recognizer_args["model_path"] == "/tmp/model"
+    assert recognizer_args["sample_rate"] == 16000
+    assert "double click" in parsed_grammar
+    assert "mouse up" in parsed_grammar
+    assert "[unk]" in parsed_grammar
 
 
 def test_record_audio_passes_device_to_sounddevice_rec(monkeypatch):
