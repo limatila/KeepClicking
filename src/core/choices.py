@@ -9,6 +9,7 @@ class BaseCommandAction(BaseChoice):
     """Supported command actions listing, choices per device type."""
     pass
 
+
 class KeyboardCommandAction(BaseCommandAction):
     """ TODO/FUTURE: Supported command actions for keyboard commands."""
     pass

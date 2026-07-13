@@ -27,6 +27,7 @@ class MouseCommandParser(CommandParser):
 
         #* Parse action type
         self.parsed_mouse_command_choice = MouseCommandAction.get_choice_by_text(text)
+        
         if self.parsed_mouse_command_choice is None:
             self.error = ParseError(reason="unrecognized_command", raw_text=text)
             return ParseResult(None, self.error)
@@ -36,9 +37,11 @@ class MouseCommandParser(CommandParser):
         #* Parse action direction (if applicable)
         if self.parsed_mouse_command_choice.requires_direction():
             parsed_direction_choice = CommandDirection.get_choice_by_text(text)
+            
             if parsed_direction_choice is None:
                 self.error = ParseError(reason="missing_command_direction", raw_text=text)
                 return ParseResult(None, self.error)
+            
             self.parsed_mouse_command.direction = parsed_direction_choice
 
         return ParseResult(self.parsed_mouse_command, self.error)
