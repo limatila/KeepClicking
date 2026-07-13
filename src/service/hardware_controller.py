@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pyautogui as pag
 
-from src.core.dataclasses import MouseCommand
 from src.core.config import AppConfig
-from src.core.errors import MouseExecutionError
+from src.core.dataclasses import MouseCommand
 from src.core.choices import MouseCommandAction, CommandDirection
+from src.core.errors import MouseExecutionError
 from src.core.logging import CONTROLLER_LOGGER
 
 from src.service.dataclasses import MouseExecutionResult
