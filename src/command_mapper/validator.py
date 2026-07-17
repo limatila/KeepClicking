@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from src.core.choices import MouseCommandAction, CommandDirection
+from src.core.choices import MouseCommandAction, CommandShape
 from src.core.errors import ValidationError
 from src.core.logging import VALIDATOR_LOGGER
 
+from src.command_mapper.command_shapes import get_command_shape
 from src.command_mapper.dataclasses import ValidationResult
 from src.command_mapper.interfaces import CommandValidator
 
@@ -18,9 +19,7 @@ class MouseCommandValidator(CommandValidator):
         return [
             self.rule_valid_action,
             self.rule_positive_amount,
-            self.rule_direction_to_directional_action,
-            self.rule_valid_scroll_direction,
-            self.rule_direction_in_non_directional_action,
+            self.rule_direction_matches_action_shape,
         ]
 
     def rule_valid_action(self) -> ValidationResult:
@@ -33,33 +32,12 @@ class MouseCommandValidator(CommandValidator):
             VALIDATOR_LOGGER.debug("validation_failed: non_positive_amount")
             raise ValidationError(reason="non_positive_amount", field="amount")
     
-    def rule_direction_to_directional_action(self) -> ValidationResult:
-        if self.command.action in (
-            MouseCommandAction.MOVE,
-            MouseCommandAction.SCROLL,
-        ):
-            if self.command.direction is None:
-                VALIDATOR_LOGGER.debug("validation_failed: missing_direction")
-                raise ValidationError(reason="missing_direction", field="direction")
+    def rule_direction_matches_action_shape(self) -> ValidationResult:
+        command_shape: "CommandShape" = get_command_shape(self.command.action)
+        validation_reason = command_shape.validate_direction(self.command.direction)
+        
+        if validation_reason is None:
+            return None
 
-            if not isinstance(self.command.direction, CommandDirection):
-                VALIDATOR_LOGGER.debug("validation_failed: invalid_direction")
-                raise ValidationError(reason="invalid_direction", field="direction")
-
-    def rule_valid_scroll_direction(self) -> ValidationResult:
-        if self.command.action == MouseCommandAction.SCROLL and self.command.direction not in (
-            CommandDirection.UP, CommandDirection.DOWN,
-        ):
-            VALIDATOR_LOGGER.debug("validation_failed: invalid_scroll_direction")
-            raise ValidationError(reason="invalid_scroll_direction", field="direction")
-
-    def rule_direction_in_non_directional_action(self) -> ValidationResult:
-        if self.command.action in (
-            MouseCommandAction.CLICK,
-            MouseCommandAction.DOUBLE_CLICK,
-            MouseCommandAction.RIGHT_CLICK,
-            MouseCommandAction.STOP,
-        ):
-            if self.command.direction is not None:
-                VALIDATOR_LOGGER.debug("validation_failed: direction_not_applicable")
-                raise ValidationError(reason="direction_not_applicable", field="direction")
+        VALIDATOR_LOGGER.debug("validation_failed: %s", validation_reason)
+        raise ValidationError(reason=validation_reason, field="direction")

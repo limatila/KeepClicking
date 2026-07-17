@@ -1,5 +1,5 @@
 from src.command_mapper.parser import MouseCommandParser
-from src.core.choices import MouseCommandAction, CommandDirection
+from src.core.choices import CommandDirection, MouseCommandAction
 
 
 def test_parse_click():
@@ -22,52 +22,10 @@ def test_parse_move_right():
     assert result.command.direction == CommandDirection.RIGHT
 
 
-def test_parse_mouse_up_as_move_up():
-    parser = MouseCommandParser()
-
-    result = parser.parse("mouse up")
-
-    assert result.command is not None
-    assert result.command.action == MouseCommandAction.MOVE
-    assert result.command.direction == CommandDirection.UP
-    assert result.error is None
-
-
-def test_parse_noisy_mouse_up_as_move_up():
-    parser = MouseCommandParser()
-
-    result = parser.parse("a mouse up")
-
-    assert result.command is not None
-    assert result.command.action == MouseCommandAction.MOVE
-    assert result.command.direction == CommandDirection.UP
-    assert result.error is None
-
-
 def test_parse_double_click_without_matching_click_first():
     parser = MouseCommandParser()
 
     result = parser.parse("double click")
-
-    assert result.command is not None
-    assert result.command.action == MouseCommandAction.DOUBLE_CLICK
-    assert result.error is None
-
-
-def test_parse_noisy_double_click():
-    parser = MouseCommandParser()
-
-    result = parser.parse("please double click now")
-
-    assert result.command is not None
-    assert result.command.action == MouseCommandAction.DOUBLE_CLICK
-    assert result.error is None
-
-
-def test_parse_two_click_as_double_click():
-    parser = MouseCommandParser()
-
-    result = parser.parse("two click")
 
     assert result.command is not None
     assert result.command.action == MouseCommandAction.DOUBLE_CLICK
@@ -87,7 +45,7 @@ def test_parse_right_click():
 def test_parse_scroll_down():
     parser = MouseCommandParser()
 
-    result = parser.parse("please scroll down now")
+    result = parser.parse("scroll down")
 
     assert result.command is not None
     assert result.command.action == MouseCommandAction.SCROLL
@@ -125,14 +83,14 @@ def test_parse_unknown():
     assert result.error is not None
 
 
-def test_parser_removes_direction_for_non_move_commands():
+def test_parse_phrase_with_extra_words_still_matches_action():
     parser = MouseCommandParser()
 
-    result = parser.parse("click up")
+    result = parser.parse("please double click now")
 
     assert result.command is not None
-    assert result.command.action == MouseCommandAction.CLICK
-    assert result.command.direction is None
+    assert result.command.action == MouseCommandAction.DOUBLE_CLICK
+    assert result.error is None
 
 
 def test_parser_resets_state_between_calls():

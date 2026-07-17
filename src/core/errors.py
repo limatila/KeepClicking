@@ -13,6 +13,10 @@ class AdapterError(ApplicationError):
     """Raised when an input adapter fails unexpectedly."""
 
 
+class NormalizationError(ApplicationError):
+    """Raised when command normalization fails structurally."""
+
+
 class ValidationError(Exception):
     """Describe a validation failure for a command field."""
 

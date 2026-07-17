@@ -38,10 +38,12 @@ Convert normalized text into command objects.
 - Create `src/command_mapper/parser.py` with `class MouseCommandParser` implementing `CommandParser`.
 - Deterministic parsing only; no probabilistic matching.
 - `MouseCommandParser` should:
-	- scan normalized text for the first `MouseCommandAction` value contained in the input
+	- scan normalized text through `MouseCommandAction.resolve_choice_by_full_text()`
+	- rely on the choice layer only for text-to-enum resolution, with broader text matches still preferring the most specific phrase before broader matches
 	- create `MouseCommand(action=...)` once an action token is found
-	- resolve `CommandDirection` only when the parsed action is `MOVE`
-	- return `ParseError(reason="missing_command_direction", raw_text=text)` when a `move` command has no direction token
+	- consult the shared command-shape registry to know whether the parsed action requires a direction
+	- resolve `CommandDirection` only when that shared shape rule requires it
+	- return `ParseError(reason="missing_command_direction", raw_text=text)` when a directional action has no direction token
 	- return `ParseError(reason="unrecognized_command", raw_text=text)` when no action token is found
 - Amount defaults come from `MouseCommand.__post_init__()` and are not injected by the parser.
 
@@ -62,8 +64,8 @@ if result.command is None:
 
 - Manually parse all command contract examples.
 
-Current drift:
-The parser implementation exists in the documented module layout, but `double click` and `right click` currently collapse to `click`, and scroll commands do not yet carry parsed directions.
+Current implementation note:
+The parser implementation exists in the documented module layout and owns command assembly after choices resolve enums from text, while the shared command-shape registry provides the direction requirements consumed by parser, validator, and canonical command generation.
 
 ## Dependencies
 

@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
+from src.core.choices import CommandShape, MouseCommandAction
 from src.core.dataclasses import MouseCommand
-from src.core.choices import MouseCommandAction, CommandDirection
 from src.core.logging import PARSER_LOGGER
 
+from src.command_mapper.command_shapes import get_command_shape
 from src.command_mapper.dataclasses import ParseError, ParseResult
 from src.command_mapper.interfaces import CommandParser
 
 
 class MouseCommandParser(CommandParser):
-    """Deterministic parser for MVP command phrases."""
+    """Deterministic parser for canonical command phrases."""
 
     def __init__(self):
         self.parsed_mouse_command_choice = None
@@ -26,7 +27,7 @@ class MouseCommandParser(CommandParser):
         text = text.lower().strip()
 
         #* Parse action type
-        self.parsed_mouse_command_choice = MouseCommandAction.get_choice_by_text(text)
+        self.parsed_mouse_command_choice = MouseCommandAction.resolve_choice_by_full_text(text)
         
         if self.parsed_mouse_command_choice is None:
             self.error = ParseError(reason="unrecognized_command", raw_text=text)
@@ -35,8 +36,9 @@ class MouseCommandParser(CommandParser):
         self.parsed_mouse_command = MouseCommand(action=self.parsed_mouse_command_choice)
 
         #* Parse action direction (if applicable)
-        if self.parsed_mouse_command_choice.requires_direction():
-            parsed_direction_choice = CommandDirection.get_choice_by_text(text)
+        command_shape: "CommandShape" = get_command_shape(self.parsed_mouse_command_choice)
+        if command_shape.requires_direction:
+            parsed_direction_choice = command_shape.resolve_direction_by_text(text)
             
             if parsed_direction_choice is None:
                 self.error = ParseError(reason="missing_command_direction", raw_text=text)

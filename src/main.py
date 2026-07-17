@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from src.core.config import AppConfig, get_config
 from src.core.logging import CORE_LOGGER, configure_logging
-
 from src.utils.cli_utilities import resolve_cli_command
 
 
 def build_application_runner(config: AppConfig):
     """Build the application runner using the current runtime config."""
 
-    from src.command_mapper.normalizer import normalize_text
+    from src.command_mapper.normalizer_dispatchers import resolve_command_normalizer
     from src.command_mapper.parser import MouseCommandParser
     from src.command_mapper.validator import MouseCommandValidator
     from src.service.application_runner import MouseApplicationRunner
@@ -23,7 +22,7 @@ def build_application_runner(config: AppConfig):
         adapter=VoskSpeechAdapter(
             config, OpenWakeWordEngine(config)
         ),
-        normalizer=normalize_text,
+        normalizer=resolve_command_normalizer(config.speech_language),
         parser=MouseCommandParser(),
         validator=MouseCommandValidator(),
         controller=PyAutoGuiMouseController(),

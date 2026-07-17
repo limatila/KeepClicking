@@ -29,11 +29,11 @@ class WakeWordEngineInterface(Protocol):
 class CustumizableAudioInputMixin:
     """Mixin to allow custom audio input device resolution for speech adapters."""
 
-    resolver = AudioDeviceResolver()
+    audio_device_resolver = AudioDeviceResolver()
 
     def resolve_input_device(self, device_name: str | None) -> int | None:
         """Resolve a configured selector to a sounddevice input device index."""
-        return self.resolver.resolve_input_device(device_name)
+        return self.audio_device_resolver.resolve_input_device(device_name)
 
     def get_audio_levels(self, audio: np.ndarray) -> dict[str, float]:
         """Return simple peak and mean amplitude statistics for captured audio."""

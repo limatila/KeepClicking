@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable
 
+from src.command_mapper.interfaces import CommandNormalizer, CommandParser, CommandValidator
 from src.core.config import AppConfig
-from src.core.errors import AdapterError, ApplicationError
+from src.core.errors import AdapterError, ApplicationError, NormalizationError
 from src.core.logging import CORE_LOGGER
-
 from src.service.interfaces import Controller
 from src.speech.interfaces import SpeechAdapterInterface
-from src.command_mapper.interfaces import CommandParser, CommandValidator
 
 
 class MouseApplicationRunner:
@@ -20,7 +18,7 @@ class MouseApplicationRunner:
     def __init__(
         self,
         adapter: SpeechAdapterInterface,
-        normalizer: Callable[[str], str],
+        normalizer: CommandNormalizer,
         parser: CommandParser,
         validator: CommandValidator,
         controller: Controller,
@@ -39,14 +37,14 @@ class MouseApplicationRunner:
         while True:
             try:
                 text = self.adapter.next_text()
-                
+
                 if text is None:
                     self.logger.info("adapter_end")
                     break
                 if text == "":
                     continue
 
-                normalized = self.normalizer(text)
+                normalized = self.normalizer.normalize(text)
                 self.logger.debug(f"normalized_text: {normalized}")
 
                 parse_result = self.parser.parse(normalized)
@@ -66,14 +64,13 @@ class MouseApplicationRunner:
                 
                 if execution.error is not None:
                     self.logger.error(f"execution_error: {execution.error}")
-                
-                if execution.stopped:
-                    self.logger.info(f"execution_stopped")
-                    break
-            
-            except AdapterError:
-                raise
 
+                if execution.stopped:
+                    self.logger.info("execution_stopped")
+                    break
+
+            except (AdapterError, NormalizationError):
+                raise
             except ApplicationError as exc:
                 self.logger.error(f"application_error_in_runtime: {exc}")
                 continue
@@ -82,7 +79,6 @@ class MouseApplicationRunner:
         try:
             self.logger.info("runner_started")
             self.listen_and_execute()
-        
         finally:
             self.adapter.close()
             self.logger.info("runner_finished")

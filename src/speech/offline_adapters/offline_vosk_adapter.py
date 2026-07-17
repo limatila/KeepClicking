@@ -8,6 +8,11 @@ import numpy as np
 import sounddevice
 from vosk import KaldiRecognizer, Model
 
+from src.command_mapper.normalizers.mappings import (
+    CANONICAL_COMMANDS,
+    ENGLISH_COMMAND_ALIASES,
+    PORTUGUESE_COMMAND_ALIASES,
+)
 from src.core.config import AppConfig
 from src.core.errors import AdapterError
 from src.core.logging import ADAPTER_LOGGER
@@ -33,26 +38,16 @@ class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface):
             raise AdapterError("offline_model_path must be configured for Vosk")
 
     def _build_command_grammar(self) -> str:
-        command_phrases = [
-            "click",
-            "double click",
-            "two click",
-            "too click",
-            "to click",
-            "right click",
-            "scroll up",
-            "scroll down",
-            "move up",
-            "move down",
-            "move left",
-            "move right",
-            "mouse up",
-            "mouse down",
-            "mouse left",
-            "mouse right",
-            "stop",
-            "[unk]",
-        ]
+        command_phrases = list(
+            dict.fromkeys(
+                (
+                    *CANONICAL_COMMANDS,
+                    *ENGLISH_COMMAND_ALIASES.keys(),
+                    *PORTUGUESE_COMMAND_ALIASES.keys(),
+                    "[unk]",
+                )
+            )
+        )
         return json.dumps(command_phrases)
 
     def _set_speech_models(self) -> None:

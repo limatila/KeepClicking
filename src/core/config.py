@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from dataclasses import MISSING, dataclass, fields, replace
 from pathlib import Path
+from enum import Enum
 from typing import Any, get_args, get_type_hints
 
 from dotenv import dotenv_values
+
+from src.core.choices import SpeechLanguage
 
 ROOT_PATH = Path(__file__).resolve().parents[2]
 ENV_PATH = ROOT_PATH / ".env"
@@ -26,6 +29,7 @@ class AppConfig:
 
     debug_mode: bool = False
     audio_input_device: str | None = None
+    speech_language: SpeechLanguage = SpeechLanguage.EN_US
     
     openwakeword_model_path: str = str(DEFAULT_OPENWAKEWORD_MODEL_PATH)
     offline_model_path: str = str(DEFAULT_OFFLINE_MODEL_PATH)
@@ -103,6 +107,10 @@ class AppConfig:
                     return True
                 if field_value.casefold() in {"0", "false"}:
                     return False
+
+            if isinstance(field_type, type) and issubclass(field_type, Enum):
+                normalized_enum_value = field_value.casefold().replace("-", "_")
+                return field_type(normalized_enum_value)
 
             try:
                 return field_type(field_value)    

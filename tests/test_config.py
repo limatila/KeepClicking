@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from src.core.choices import SpeechLanguage
 import src.core.config as config_module
 from src.core.config import (
     DEFAULT_OFFLINE_MODEL_PATH,
@@ -20,6 +21,7 @@ def test_get_config_defaults(monkeypatch):
     assert "keeper" in config.wake_word_phrase
     assert Path(config.offline_model_path) == DEFAULT_OFFLINE_MODEL_PATH
     assert Path(config.openwakeword_model_path) == DEFAULT_OPENWAKEWORD_MODEL_PATH
+    assert config.speech_language == SpeechLanguage.EN_US
 
 
 def test_get_config_overrides():
@@ -46,6 +48,7 @@ def test_get_config_parses_env_values(monkeypatch):
             "mouse_scroll_units": "425",
             "wake_word_listen_seconds": "2.5",
             "audio_input_device": "USB 2.0",
+            "speech_language": "pt-br",
         }),
     )
 
@@ -61,4 +64,5 @@ def test_get_config_parses_env_values(monkeypatch):
         mouse_scroll_units=425,
         wake_word_listen_seconds=2.5,
         audio_input_device="USB 2.0",
+        speech_language=SpeechLanguage.PT_BR,
     )

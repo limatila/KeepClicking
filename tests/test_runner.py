@@ -1,9 +1,9 @@
 import logging
 
+from src.command_mapper.normalizers.english import EnglishSpeechNormalizer
 from src.core.config import get_config
 from src.core.choices import MouseCommandAction
 
-from src.command_mapper.normalizer import normalize_text
 from src.command_mapper.parser import MouseCommandParser
 from src.command_mapper.validator import MouseCommandValidator
 from src.service.dataclasses import MouseExecutionResult
@@ -43,7 +43,7 @@ def test_runner_executes_commands():
 
     runner = MouseApplicationRunner(
         adapter=adapter,
-        normalizer=normalize_text,
+        normalizer=EnglishSpeechNormalizer(),
         parser=MouseCommandParser(),
         validator=MouseCommandValidator(),
         controller=controller,
@@ -55,3 +55,24 @@ def test_runner_executes_commands():
 
     assert controller.seen == [MouseCommandAction.CLICK, MouseCommandAction.STOP]
     assert adapter.closed is True
+
+
+def test_runner_continues_after_parse_error():
+    adapter = FakeAdapter(["nonsense", "click", "stop"])
+    controller = FakeController()
+    logger = logging.getLogger("test.runner.parse_error")
+    logger.addHandler(logging.NullHandler())
+
+    runner = MouseApplicationRunner(
+        adapter=adapter,
+        normalizer=EnglishSpeechNormalizer(),
+        parser=MouseCommandParser(),
+        validator=MouseCommandValidator(),
+        controller=controller,
+        config=get_config(),
+        logger=logger,
+    )
+
+    runner.run()
+
+    assert controller.seen == [MouseCommandAction.CLICK, MouseCommandAction.STOP]

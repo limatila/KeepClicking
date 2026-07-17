@@ -1,78 +1,42 @@
 """Domain command models."""
 
 from __future__ import annotations
+from dataclasses import dataclass
 
 from src.core.interfaces.choices import BaseChoice
 
 
+class SpeechLanguage(BaseChoice):
+    """Supported speech normalization locales."""
+
+    EN_US = "en_us"
+    PT_BR = "pt_br"
+
+
 class BaseCommandAction(BaseChoice):
     """Supported command actions listing, choices per device type."""
-    pass
 
 
 class KeyboardCommandAction(BaseCommandAction):
     """ TODO/FUTURE: Supported command actions for keyboard commands."""
-    pass
 
 
 class MouseCommandAction(BaseCommandAction):
     """Supported command actions for the MVP pipeline."""
 
-    STOP = "stop" #user cancel word
+    STOP = "stop"  # user cancel word
     CLICK = "click"
     DOUBLE_CLICK = "double_click"
     RIGHT_CLICK = "right_click"
     SCROLL = "scroll"
     MOVE = "move"
-
-    @classmethod
-    def _contains_token(cls, tokens: list[str], valid_tokens: set[str]) -> bool:
-        return any(token in valid_tokens for token in tokens)
-
-    @classmethod
-    def ordered_text_matchers(cls) -> list[tuple[str, "MouseCommandAction"]]:
-        return [
-            ("double click", cls.DOUBLE_CLICK),
-            ("right click", cls.RIGHT_CLICK),
-            ("scroll", cls.SCROLL),
-            ("mouse", cls.MOVE),
-            ("move", cls.MOVE),
-            ("stop", cls.STOP),
-            ("click", cls.CLICK),
-        ]
-
-    @classmethod
-    def get_choice_by_text(cls, text: str) -> "MouseCommandAction | None":
-        normalized_text = text.strip().lower()
-        normalized_tokens = normalized_text.split()
-
-        if cls._contains_token(normalized_tokens, {"double", "two", "too", "to", "2"}) and cls._contains_token(
-            normalized_tokens,
-            {"click"},
-        ):
-            return cls.DOUBLE_CLICK
-
-        if cls._contains_token(normalized_tokens, {"right"}) and cls._contains_token(
-            normalized_tokens,
-            {"click"},
-        ):
-            return cls.RIGHT_CLICK
-
-        for action_text, action_choice in cls.ordered_text_matchers():
-            action_tokens = action_text.split()
-            window_size = len(action_tokens)
-
-            for start_index in range(len(normalized_tokens) - window_size + 1):
-                if normalized_tokens[start_index:start_index + window_size] == action_tokens:
-                    return action_choice
-
-            if action_text == normalized_text:
-                return action_choice
-
-        return None
-
+    # DRAG = "drag" # TODO: drag to directions
+    
     def requires_direction(self) -> bool:
-        return self in (self.MOVE, self.SCROLL)
+        return self.value in (
+            MouseCommandAction.SCROLL,
+            MouseCommandAction.MOVE
+        )
 
 
 class CommandDirection(BaseChoice):
@@ -83,16 +47,51 @@ class CommandDirection(BaseChoice):
     LEFT = "left"
     RIGHT = "right"
 
-    @classmethod
-    def get_choice_by_text(cls, text: str) -> "CommandDirection | None":
-        normalized_tokens = text.strip().lower().split()
 
-        for direction in cls:
-            direction_tokens = direction.value.split()
-            window_size = len(direction_tokens)
+@dataclass(frozen=True, slots=True)
+class CommandShape:
+    """Describe how a command action can combine with command directions, in valid shapes."""
 
-            for start_index in range(len(normalized_tokens) - window_size + 1):
-                if normalized_tokens[start_index:start_index + window_size] == direction_tokens:
-                    return direction
+    action: MouseCommandAction
+    allowed_directions: tuple[CommandDirection, ...] = ()
+    invalid_direction_reason: str = "invalid_direction"
+
+    @property
+    def normalized_value(self) -> str:
+        return self.action.value.replace("_", " ")
+
+    @property
+    def requires_direction(self) -> bool:
+        return len(self.allowed_directions) > 0
+
+    def canonical_phrases(self) -> tuple[str, ...]:
+        if not self.requires_direction:
+            return (self.normalized_value,)
+
+        return tuple(
+            f"{self.normalized_value} {direction.value}"
+            for direction in self.allowed_directions
+        )
+
+    def resolve_direction_by_text(self, text: str) -> CommandDirection | None:
+        if not self.requires_direction:
+            return None
+        return CommandDirection.resolve_choice_by_full_text(text)
+
+    def validate_direction(self, direction: object) -> str | None:
+        if self.requires_direction:
+            if direction is None:
+                return "missing_direction"
+
+            if not isinstance(direction, CommandDirection):
+                return "invalid_direction"
+
+            if direction not in self.allowed_directions:
+                return self.invalid_direction_reason
+
+            return None
+
+        if direction is not None:
+            return "direction_not_applicable"
 
         return None

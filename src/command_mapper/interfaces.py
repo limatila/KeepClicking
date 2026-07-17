@@ -6,6 +6,20 @@ from src.core.errors import ValidationError
 from src.core.logging import VALIDATOR_LOGGER
 
 
+class CommandNormalizer(Protocol):
+    """Base interface for command normalizers."""
+
+    def normalize(self, text: str) -> str:
+        """Normalize text into a standard format for parsing."""
+
+
+class CommandParser(Protocol):
+    """Base interface for command parsers."""
+
+    def parse(self, text: str) -> ParseResult:
+        """Parse normalized text into a command or an error."""
+
+
 class CommandValidator:
     """Base interface for command validators."""
     def __init__(self):
@@ -38,10 +52,3 @@ class CommandValidator:
             VALIDATOR_LOGGER.debug("validation_ok: %s", command.action)
         
         return ValidationResult(command=self.command, error=self.error)
-
-
-class CommandParser(Protocol):
-    """Base interface for command parsers."""
-
-    def parse(self, text: str) -> ParseResult:
-        """Parse normalized text into a command or an error."""

@@ -1,6 +1,11 @@
 import json
 import numpy as np
 
+from src.command_mapper.normalizers.mappings import (
+    CANONICAL_COMMANDS,
+    ENGLISH_COMMAND_ALIASES,
+    PORTUGUESE_COMMAND_ALIASES,
+)
 from src.core.config import get_config
 from src.speech.audio_device_resolver import AudioDeviceResolver
 import src.speech.offline_adapters.offline_vosk_adapter as vosk_adapter
@@ -31,10 +36,22 @@ def test_set_speech_models_uses_command_grammar(monkeypatch):
 
     adapter._set_speech_models()
     parsed_grammar = json.loads(recognizer_args["grammar"])
+    expected_grammar = list(
+        dict.fromkeys(
+            (
+                *CANONICAL_COMMANDS,
+                *ENGLISH_COMMAND_ALIASES.keys(),
+                *PORTUGUESE_COMMAND_ALIASES.keys(),
+                "[unk]",
+            )
+        )
+    )
 
     assert recognizer_args["model_path"] == "/tmp/model"
     assert recognizer_args["sample_rate"] == 16000
+    assert parsed_grammar == expected_grammar
     assert "double click" in parsed_grammar
+    assert "two click" in parsed_grammar
     assert "mouse up" in parsed_grammar
     assert "[unk]" in parsed_grammar
 
