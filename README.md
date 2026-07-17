@@ -55,7 +55,7 @@ Notes:
 The current voice flow is:
 
 1. Start the CLI.
-2. Say the activation word: `keeper`
+2. Say the activation word: `hey keeper`
 3. After wake-word detection, say the command within the listening window.
 
 Commands that are currently implemented in the CLI:
@@ -103,7 +103,8 @@ Notes:
 - The wake word and the command are handled as a sequence. The runtime listens for the wake word first, then records the command phrase.
 - The default command listening window is `5.0` seconds.
 - `stop` ends the running CLI loop.
-- `scroll` currently supports `up` and `down`.
+- `scroll` currently supports `up` and `down`, and bare `scroll` is treated as incomplete input rather than a canonical command.
+- Speech normalization currently supports `en_us` by default and can be prepared for `pt_br`, while still feeding the parser with canonical English commands.
 
 ## Possible Errors
 
@@ -116,11 +117,13 @@ These are the main errors you can hit in the current CLI flow:
 - `No input-capable audio devices were found.`
   No usable microphone was returned by `sounddevice`.
 - `parse_error: unrecognized_command`
-  The recognized speech was outside the currently supported command set.
+  The normalized speech was outside the currently supported canonical command set.
 - `parse_error: missing_command_direction`
-  The command was recognized as `move` or `scroll`, but no direction was detected.
+  The normalized command was recognized as `move` or `scroll`, but no direction was detected.
 - `validation_error: invalid_scroll_direction`
   `scroll` was recognized with a direction that is not currently supported.
+- `speech_normalization_failure`
+  A structural failure happened inside the speech normalizer layer.
 - `Vosk adapter failure`
   A lower-level speech capture or Vosk runtime error happened.
 - `OpenWakeWord model initialization failed`
@@ -135,6 +138,7 @@ This section is based on `src/core/config.py` and cross-checked against the test
 | `.env` key | Default | Consequence in the current CLI |
 | --- | --- | --- |
 | `debug_mode` | `False` | Keeps the CLI in normal runtime mode unless explicitly enabled. |
+| `speech_language` | `en_us` | Selects which speech normalizer is used before parsing. Current supported values are `en_us` and `pt_br`. |
 | `openwakeword_model_path` | `src/resources/models/openwakeword/keeper_v1.onnx` | Selects which OpenWakeWord model file is used to detect the activation word. |
 | `offline_model_path` | `src/resources/models/vosk/vosk-model-small-en-us-0.15` | Selects the bundled Vosk model directory used for offline speech recognition. |
 | `pyautogui_pause_seconds` | `0.1` | Adds a pause after PyAutoGUI actions. Higher values make actions safer/slower; lower values make them faster. |
