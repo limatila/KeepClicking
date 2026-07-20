@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 
 import numpy as np
@@ -11,7 +12,7 @@ import sounddevice
 from openwakeword import Model
 from openwakeword.utils import download_file
 
-from src.core.config import AppConfig
+from src.core.config import AppConfig, OPENWAKEWORD_LIB_CACHE_DIR, OPENWAKEWORD_LIB_MODEL_DIR
 from src.core.errors import AdapterError
 from src.core.logging import ADAPTER_LOGGER
 from src.speech.interfaces import (
@@ -19,18 +20,11 @@ from src.speech.interfaces import (
     WakeWordEngineInterface,
 )
 
-OPENWAKEWORD_MODEL_DIR = (
-    Path(openwakeword.__file__).resolve().parent / "resources" / "models"
-)
-OPENWAKEWORD_CACHE_DIR = (
-    Path(__file__).resolve().parents[3] / ".cache" / "openwakeword"
-)
-
 
 class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
     """OpenWakeWord-based wake-word detector."""
 
-    def __init__(self, config: AppConfig, threshold: float = 0.2, sample_rate: int = 16000, chunk_seconds: float = 0.5):
+    def __init__(self, config: AppConfig, threshold: float = 0.35, sample_rate: int = 16000, chunk_seconds: float = 0.5):
         self.wake_word_phrase = config.wake_word_phrase
         self.model_path = str(config.openwakeword_model_path)
         self.threshold = threshold
@@ -41,13 +35,13 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
         self.device_index = self.resolve_input_device(config.audio_input_device)
 
     def _resolve_openwakeword_feature_models(self) -> tuple[str, str]:
-        packaged_melspec_path = OPENWAKEWORD_MODEL_DIR / "melspectrogram.onnx"
-        packaged_embedding_path = OPENWAKEWORD_MODEL_DIR / "embedding_model.onnx"
+        packaged_melspec_path = OPENWAKEWORD_LIB_MODEL_DIR / "melspectrogram.onnx"
+        packaged_embedding_path = OPENWAKEWORD_LIB_MODEL_DIR / "embedding_model.onnx"
         if packaged_melspec_path.exists() and packaged_embedding_path.exists():
             return str(packaged_melspec_path), str(packaged_embedding_path)
 
-        cache_melspec_path = OPENWAKEWORD_CACHE_DIR / "melspectrogram.onnx"
-        cache_embedding_path = OPENWAKEWORD_CACHE_DIR / "embedding_model.onnx"
+        cache_melspec_path = OPENWAKEWORD_LIB_CACHE_DIR / "melspectrogram.onnx"
+        cache_embedding_path = OPENWAKEWORD_LIB_CACHE_DIR / "embedding_model.onnx"
         missing_assets = {
             "melspectrogram": cache_melspec_path,
             "embedding": cache_embedding_path,
@@ -64,7 +58,7 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
         return str(cache_melspec_path), str(cache_embedding_path)
 
     def _download_openwakeword_feature_models(self, target_paths: dict[str, Path]) -> None:
-        OPENWAKEWORD_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        OPENWAKEWORD_LIB_CACHE_DIR.mkdir(parents=True, exist_ok=True)
         try:
             for asset_name, target_path in target_paths.items():
                 if target_path.exists():
@@ -78,13 +72,13 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
                     target_path.name,
                     target_path,
                 )
-                download_file(download_url, str(OPENWAKEWORD_CACHE_DIR))
+                download_file(download_url, str(OPENWAKEWORD_LIB_CACHE_DIR))
         except Exception as err:
             raise AdapterError(
                 "OpenWakeWord support assets are missing and could not be "
                 "downloaded automatically. "
-                f"Checked '{OPENWAKEWORD_MODEL_DIR}' and "
-                f"'{OPENWAKEWORD_CACHE_DIR}'."
+                f"Checked '{OPENWAKEWORD_LIB_MODEL_DIR}' and "
+                f"'{OPENWAKEWORD_LIB_CACHE_DIR}'."
             ) from err
 
     def load_model(self) -> Model:

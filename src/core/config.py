@@ -7,6 +7,7 @@ from pathlib import Path
 from enum import Enum
 from typing import Any, get_args, get_type_hints
 
+import openwakeword
 from dotenv import dotenv_values
 
 from src.core.choices import SpeechLanguage
@@ -14,6 +15,13 @@ from src.core.choices import SpeechLanguage
 ROOT_PATH = Path(__file__).resolve().parents[2]
 ENV_PATH = ROOT_PATH / ".env"
 MODELS_PATH = ROOT_PATH / "src" / "resources" / "models"
+
+OPENWAKEWORD_LIB_MODEL_DIR = (
+    Path(openwakeword.__file__).resolve().parent / "resources" / "models"
+)
+OPENWAKEWORD_LIB_CACHE_DIR = (
+    ROOT_PATH / ".cache" / "openwakeword"
+)
 
 DEFAULT_OPENWAKEWORD_MODEL_PATH = (
     MODELS_PATH / "openwakeword" / "hey_keeper_v2.onnx"
