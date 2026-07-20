@@ -58,3 +58,7 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Default OpenWakeword models
+src/resources/models/openwakeword/embedding_model.onnx
+src/resources/models/openwakeword/melspectrogram.onnx
