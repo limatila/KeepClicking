@@ -34,14 +34,12 @@ class AudioDeviceResolver:
                 requested_index = int(selector)
             except ValueError:
                 requested_index = None
-        else:
-            requested_index = None
-
-        if selector is None:
-            return None
 
         devices = self.list_input_devices()
         for device in devices:
+            if selector is None:
+                return device["index"]
+            
             if device["index"] == requested_index:
                 return requested_index
 
