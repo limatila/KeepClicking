@@ -1,6 +1,6 @@
 # 006 — Implement Command Validator
 
-Status: `[INCOMPLETE]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
@@ -38,9 +38,10 @@ Validate parsed commands before execution.
 - `MouseCommandValidator` must reject:
 	- actions that are not instances of `MouseCommandAction`
 	- negative amounts
-	- `move` commands without a direction
-	- `move` commands whose direction is not a `CommandDirection`
-	- non-`move` commands that still carry a direction
+	- directional commands without a direction
+	- directional commands whose direction is not a `CommandDirection`
+	- `scroll` commands with horizontal directions
+	- non-directional commands that still carry a direction
 - Validation must be deterministic and side-effect free.
 
 Pseudo-code summary:
@@ -60,8 +61,8 @@ if result.command is None:
 
 - Create invalid command objects and confirm rejection.
 
-Current drift:
-The validator wiring exists, but the current rules still allow `scroll` commands without a direction and accept zero-amount non-stop commands.
+Current implementation note:
+The validator uses the shared command-shape registry, so parser, validator, and canonical command generation agree on which actions require directions and which directions are valid.
 
 ## Dependencies
 

@@ -38,13 +38,13 @@ Define runtime configuration defaults for movement, scrolling, wake-word behavio
 - Define `AppConfig` as a dataclass with explicit defaults:
 	- `debug_mode: bool`
 	- `openwakeword_model_path: str`
-	- `mouse_movement_pixels: int = 50`
-	- `mouse_scroll_units: int = 300`
+	- `mouse_movement_pixels: int = 200`
+	- `mouse_scroll_units: int = 350`
 	- `pyautogui_pause_seconds: float = 0.1`
 	- `pyautogui_failsafe: bool | None`
-	- `wake_word_phrase: str = "keeper"`
-	- `wake_word_listen_seconds: float = 5.0`
-	- `offline_model_path: str | None = None`
+	- `wake_word_phrase: str = "hey keeper"`
+	- `wake_word_listen_seconds: float = 3.0`
+	- `offline_model_path: str = "src/resources/models/vosk/vosk-model-small-en-us-0.15"`
 	- `audio_input_device: str | None = None`
 - Provide `get_env_or_default(key: str, default: str) -> str` for `.env`-backed values.
 - Provide `def get_config(base: AppConfig | None = AppConfig(), **overrides) -> AppConfig` that returns the current config object when `overrides` are absent and a copied dataclass when overrides are provided.

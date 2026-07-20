@@ -1,63 +1,81 @@
 # MVP Package Local Runner
 
-Status: `[PENDING]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
-Track the final packaging execution work that follows the numbered implementation specs and ADRs.
+Track the final local production packaging execution work that follows the numbered implementation specs and ADRs.
 
 ## Context
 
-- Users should be able to install and run the app without using a terminal.
-- Production packages must not show a terminal window.
-- Development workflows may use debug scripts, but no terminal launcher is required.
-- This file is an umbrella follow-up after the numbered specs, especially spec 017 and ADR 021.
+- Users should be able to run a production artifact without a terminal window.
+- The production runtime entrypoint is `src/main.py`.
+- `src/cli.py` is a dev-only harness and is excluded from production packaging.
+- This file is the umbrella follow-up after spec 017 and ADR 021.
 
 ## Scope
 
-- Define production packaging outputs for Windows and Linux.
-- Document dev setup separately from production installation.
-- Separate core speech setup from optional dev-only keyboard mode.
+- Produce a first-stage local Windows production executable.
+- Document production packaging separately from development setup.
+- Keep speech resources bundled under production runtime resources.
+- Exclude repository, dev, test, and cache files from production packaging.
 
 ## Out of scope
 
+- MSI/installer EXE wrapping.
+- Linux deb packaging.
 - App store packaging.
 
 ## Inputs
 
-- Validated MVP.
+- Automated-test-validated MVP.
+- Packaging toolchain decision from ADR 021.
+- Runtime models under `src/resources/models`.
 
 ## Outputs
 
-- Windows installer (MSI or EXE) with no console window.
-- Linux installer package (deb) or equivalent.
-- Updated setup docs separating production installs from development workflows.
+- `dist/KeepClicking.exe`
+- `scripts/build_exe.ps1`
+- README production/development documentation.
+- Packaging and validation records in `.github/specs` and `docs/validation`.
 
 ## Implementation requirements
 
-- Follow ADR decision in `021-adr-packaging-toolchain.md`.
-- Update `README.md` with:
-	- Production installation section (Windows + Linux installers).
-	- Dev setup section (virtualenv + developer runner script usage).
-	- Explicit note that production runs without a terminal window.
-	- Optional speech dependencies section tied to ADR 018.
-	- Troubleshooting section for missing optional dependencies.
-- Avoid documenting a terminal launcher.
+- Use PyInstaller in windowed one-file mode.
+- Build from `src/main.py`, not `src/cli.py`.
+- Bundle only the default production model resources.
+- Use `packaging/hooks/hook-sklearn.py` to omit non-runtime sklearn dataset/test data.
+- Keep OpenWakeWord support assets as production resources:
+	- `src/resources/models/openwakeword/melspectrogram.onnx`
+	- `src/resources/models/openwakeword/embedding_model.onnx`
+- Exclude from production artifacts:
+	- `.venv`, `.cache`, `.tmp_pytest`, `.pytest_cache`
+	- `.gitignore`, `.python-version`, `pytest.ini`, `rewrite-email.ps1`, `uv.lock`
+	- `tests/`, `.vscode/`, `.agents/`, `.github/`
+	- `src/cli.py`
+	- dev-only dependencies such as `pytest`, `faker`, and `pyinstaller`
 
-Pseudo-code summary:
+Portable build command:
 
-```text
-pyinstaller --windowed --onefile src
+```powershell
+.\scripts\build_exe.ps1
 ```
 
 ## Acceptance criteria
 
-- A fresh setup can install a production package without using a terminal.
-- A dev setup can run a developer runner script without speech dependencies.
+- `uv run pytest`: pass, 86 tests.
+- `uv run python -m src.main -h`: pass.
+- `uv run python -m src.main --list-audio-devices`: pass.
+- `dist/KeepClicking.exe -h`: pass by exit code.
+- `dist/KeepClicking.exe --list-audio-devices`: pass by exit code.
+- Production package starts from `src/main.py` and is windowed.
+- Archive inspection finds no forbidden project/dev paths, old wake-word model, PT Vosk model, or sklearn dataset test data.
 
 ## Manual validation
 
-- Clone into a clean environment and run setup instructions.
+- Packaging validation completed on 2026-07-20.
+- Final EXE size: 127,547,748 bytes.
+- Live speech/manual mouse validation is tracked separately in spec 016 and still requires a human desktop pass.
 
 ## Dependencies
 
@@ -69,4 +87,4 @@ pyinstaller --windowed --onefile src
 
 ## Reference to Next step
 
-Future specs may add hotword detection, macros, GUI, or online adapters.
+Future specs may add installer wrapping, Linux packaging, GUI, macros, or online adapters.

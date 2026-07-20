@@ -41,7 +41,8 @@ Always-on background daemon is the intended production mode.
 
 CLI usage is for development, debugging, and testing only.
 Production packages must not show a terminal window to the user.
-The current local entrypoint is `src/cli.py`, which wires the wake-word + offline speech pipeline directly.
+The production entrypoint is `src/main.py`, which wires the wake-word + offline speech pipeline.
+The local `src/cli.py` module is a dev-only harness and must not be included in production packages.
 
 GUI-based configuration is a nice-to-have for the future but is deferred for MVP simplicity.
 

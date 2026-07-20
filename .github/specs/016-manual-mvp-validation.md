@@ -1,63 +1,66 @@
-# 016 — Manual MVP Validation
+# 016 - Manual MVP Validation
 
 Status: `[INCOMPLETE]`
 
 ## Purpose
 
-Validate the MVP manually in a real desktop environment.
+Validate the MVP in a real desktop environment and keep a validation record under `docs/validation/mvp-checklist.md`.
 
 ## Context
 
-- Automated tests should not perform real mouse movement.
-- Manual validation ensures the end-to-end pipeline works safely.
+- Automated tests must not perform real mouse movement.
+- Automated validation now covers parser, validator, runner wiring, audio-device resolution, wake-word support asset resolution, Vosk adapter behavior, and PyAutoGUI calls with mocks.
+- Live speech/manual mouse validation still requires a human desktop pass with microphone input and a safe mouse target.
 
 ## Scope
 
-- Create a checklist for speech-first mode (wake word + offline speech).
-- Include a dev-only keyboard checklist for debugging.
+- Maintain a validation checklist for speech-first mode.
+- Include production entrypoint and packaged executable smoke checks.
+- Keep dev-only CLI checks separate from production validation.
 
 ## Out of scope
 
-- New implementation features.
-- GUI testing (future capability).
+- GUI testing.
+- App store or installer validation.
 
 ## Inputs
 
-- Built MVP speech pipeline (wake-word + offline speech + runner).
+- Built MVP speech pipeline using `src/main.py`.
+- Dev-only harness in `src/cli.py`.
+- Packaged local executable in `dist/KeepClicking.exe`.
 
 ## Outputs
 
-- Manual validation report or checklist completion record.
+- `docs/validation/mvp-checklist.md` records:
+	- Environment and Python version.
+	- Production and packaged smoke checks.
+	- Current model/resource paths.
+	- Pass/fail state for every MVP command.
+	- Explicit live speech/manual mouse status.
 
 ## Implementation requirements
 
-- Create `docs/validation/mvp-checklist.md` with the following sections:
-	- Environment (OS, Python version)
-	- Input mode (speech_offline or keyboard_dev)
-	- Commands tested (list each MVP command)
-	- Pass/fail per command
-	- Notes/issues
-- Include both keyboard and speech sections, marking speech as optional if dependencies are unavailable.
-
-Pseudo-code summary:
-
-```text
-Checklist:
-- click: pass/fail
-- double click: pass/fail
-... etc
-```
+- Keep `docs/validation/mvp-checklist.md` aligned with the code defaults:
+	- Wake phrase: `hey keeper`
+	- Wake-word model: `src/resources/models/openwakeword/hey_keeper_v2.onnx`
+	- Wake-word listen window: `3.0` seconds
+	- Movement: `200` pixels
+	- Scroll: `350` units
+	- Audio input: system default when `audio_input_device` is unset
+- Mark automated command-path coverage separately from live speech/manual mouse validation.
 
 ## Acceptance criteria
 
-- Every MVP command has a pass/fail result.
+- Every MVP command has an automated command-path pass/fail result.
+- Live speech/manual mouse status is recorded honestly.
+- Spec remains incomplete until a human completes the live speech/manual mouse pass.
 
 ## Manual validation
 
-- Complete the checklist on the development machine.
-
-Current drift:
-The checklist template exists, but the repository does not yet include a filled validation record.
+- Automated preflight completed on 2026-07-20: `uv run pytest` passed with 86 tests.
+- Production module smokes completed on 2026-07-20.
+- Packaged executable smokes completed on 2026-07-20.
+- Live speech/manual mouse validation: not run in this agent session.
 
 ## Dependencies
 
@@ -68,4 +71,4 @@ The checklist template exists, but the repository does not yet include a filled 
 
 ## Reference to Next step
 
-`015-add-tests.md` - path: `.github/specs/015-add-tests.md`
+`017-package-local-runner.md` - path: `.github/specs/017-package-local-runner.md`

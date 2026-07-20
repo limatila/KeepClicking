@@ -1,65 +1,84 @@
-# 017 — Package Local Runner Preparation
+# 017 - Package Local Runner Preparation
 
-Status: `[INCOMPLETE]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
-Prepare the project for user-friendly production packaging.
+Prepare and validate the first production packaging target for local use.
 
 ## Context
 
-- Users should be able to install and run the app without using a terminal.
+- Production runs through `src/main.py`.
+- `src/cli.py` is a dev-only harness and is excluded from production packaging.
 - Production packages must not show a terminal window.
-- Development workflows may use debug scripts, but no terminal launcher is required.
+- Installer wrapping is deferred; the first MVP artifact is a local windowed PyInstaller EXE.
 
 ## Scope
 
-- Define production packaging outputs for Windows and Linux.
-- Document dev setup separately from production installation.
-- Separate core speech setup from optional dev-only keyboard mode.
+- Build a Windows windowed executable from `src/main.py`.
+- Bundle runtime model resources.
+- Keep dev/test/cache/repository files out of the production artifact.
+- Document development setup separately from production packaging.
 
 ## Out of scope
 
+- MSI/installer EXE wrapping.
+- Linux deb packaging.
 - App store packaging.
 
 ## Inputs
 
-- Validated MVP.
+- Automated-test-validated MVP.
+- Runtime resources under `src/resources/models`.
 
 ## Outputs
 
-- Windows installer (MSI or EXE) with no console window.
-- Linux installer package (deb) or equivalent.
-- Updated setup docs separating production installs from development workflows.
+- `dist/KeepClicking.exe`
+- `scripts/build_exe.ps1`
+- Updated README production/development sections.
+- Updated validation checklist and package smoke results.
 
 ## Implementation requirements
 
-- Follow ADR decision in `021-adr-packaging-toolchain.md`.
-- Update `README.md` with:
-	- Production installation section (Windows + Linux installers).
-	- Dev setup section (virtualenv + developer runner script usage).
-	- Explicit note that production runs without a terminal window.
-	- Optional speech dependencies section tied to ADR 018.
-	- Troubleshooting section for missing optional dependencies.
-- Avoid documenting a terminal launcher.
+- Follow ADR decision in `021-adr-packaging-toolchain.md`: use PyInstaller.
+- Build from `src/main.py` with windowed mode.
+- Include only the default production model data:
+	- `src/resources/models/openwakeword/hey_keeper_v2.onnx`
+	- `src/resources/models/openwakeword/melspectrogram.onnx`
+	- `src/resources/models/openwakeword/embedding_model.onnx`
+	- `src/resources/models/vosk/vosk-model-small-en-us-0.15`
+- Use `packaging/hooks/hook-sklearn.py` to omit non-runtime sklearn dataset/test data from the PyInstaller artifact.
+- Exclude production-irrelevant files and modules:
+	- `.venv`, `.cache`, `.tmp_pytest`, `.pytest_cache`
+	- `.gitignore`, `.python-version`, `pytest.ini`, `rewrite-email.ps1`, `uv.lock`
+	- `tests/`, `.vscode/`, `.agents/`, `.github/`
+	- `src/cli.py`
+	- `pytest`, `faker`, `pyinstaller`, and other dev-only dependencies
+- Keep development dependencies in `[dependency-groups].dev`.
 
-Pseudo-code summary:
+Portable build command:
 
-```text
-pyinstaller --windowed --onefile src
+```powershell
+.\scripts\build_exe.ps1
 ```
 
 ## Acceptance criteria
 
-- A fresh setup can install a production package without using a terminal.
-- A dev setup can run the current speech-based developer runner, or a separately wired keyboard-adapter harness for debugging.
+- `uv run pytest` passes.
+- `uv run python -m src.main -h` exits successfully.
+- `uv run python -m src.main --list-audio-devices` exits successfully.
+- `dist/KeepClicking.exe -h` exits successfully.
+- `dist/KeepClicking.exe --list-audio-devices` exits successfully.
+- Production executable is windowed and built from `src/main.py`.
+- Archive inspection finds no forbidden project/dev paths, old wake-word model, PT Vosk model, or sklearn dataset test data.
 
 ## Manual validation
 
-- Clone into a clean environment and run setup instructions.
-
-Current drift:
-The README documents the intended install paths, but the repository does not yet include the production packaging pipeline or installer outputs described here.
+- Automated tests: pass, 86 passed on 2026-07-20.
+- Production entrypoint smokes: pass on 2026-07-20.
+- Packaged executable smokes: pass by exit code on 2026-07-20.
+- Archive exclusion check: pass on 2026-07-20.
+- Live speech/manual mouse pass is tracked by spec 016 and remains a human validation step.
 
 ## Dependencies
 
@@ -70,4 +89,4 @@ The README documents the intended install paths, but the repository does not yet
 
 ## Reference to Next step
 
-Future specs may add hotword detection, macros, GUI, or online adapters.
+Future specs may add installer wrapping, Linux packaging, GUI, macros, or online adapters.

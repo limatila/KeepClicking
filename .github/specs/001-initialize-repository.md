@@ -37,6 +37,7 @@ Create the initial Python repository layout for KeepClicking.
 - Use a `src/` layout with `src/__init__.py`.
 - Create the following package structure (empty modules only, with short module docstrings):
 	- `src/__init__.py`
+	- `src/main.py` (production entrypoint)
 	- `src/cli.py` (dev-only harness)
 	- `src/core/config.py`
 	- `src/core/choices.py`

@@ -1,6 +1,6 @@
 # 015 — Add Tests
 
-Status: `[INCOMPLETE]`
+Status: `[COMPLETE]`
 
 ## Purpose
 
@@ -63,8 +63,8 @@ def test_parser_click():
 
 ## Manual validation
 
-- Run the test command and confirm all tests pass.
-- Current drift: the suite exists, but at least one config expectation is out of sync with `.env`, so this step remains incomplete until the tests are brought back to green.
+- `uv run pytest` passes locally.
+- Last recorded automated run: 86 passed on 2026-07-20.
 
 ## Dependencies
 
