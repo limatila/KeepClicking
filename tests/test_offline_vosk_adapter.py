@@ -58,14 +58,10 @@ def test_set_speech_models_uses_command_grammar(monkeypatch):
 
 def test_record_audio_passes_device_to_sounddevice_rec(monkeypatch):
     monkeypatch.setattr(
-        "src.speech.audio_device_resolver.sounddevice.query_devices",
-        lambda: [
-            {"name": "Built-in Microphone", "max_input_channels": 0},
-            {"name": "USB 2.0 Microphone", "max_input_channels": 2},
-        ],
+        AudioDeviceResolver,
+        "resolve_input_device",
+        lambda self, selector: 1,
     )
-    monkeypatch.setattr(AudioDeviceResolver, "_query_hostapis_safe", lambda self: [])
-    monkeypatch.setattr(AudioDeviceResolver, "_load_alsa_cards", lambda self: {})
 
     config = get_config(audio_input_device="USB 2.0", offline_model_path="/tmp/model")
     adapter = VoskSpeechAdapter(config, DummyWakeWordEngine())

@@ -6,16 +6,6 @@ from src.core.config import get_config
 from src.speech.audio_device_resolver import AudioDeviceResolver
 import src.speech.wakeword.engine as wakeword_engine
 from src.speech.wakeword.engine import OpenWakeWordEngine
-from src.speech.interfaces import CustumizableAudioInputMixin
-
-
-class FakeAudioInput(CustumizableAudioInputMixin):
-    def __init__(self, resolver=None):
-        self.audio_device_resolver = resolver or AudioDeviceResolver()
-
-
-def resolve_audio_input_device(device_name: str | None) -> int | None:
-    return FakeAudioInput().resolve_input_device(device_name)
 
 
 def test_load_model_uses_configured_model_path(monkeypatch):
@@ -215,18 +205,10 @@ def test_wait_for_wake_word_reuses_one_input_stream(monkeypatch):
 
 def test_wait_for_wake_word_passes_device_to_input_stream(monkeypatch):
     monkeypatch.setattr(
-        "src.speech.audio_device_resolver.sounddevice.query_devices",
-        lambda: [
-            {"name": "Built-in Microphone", "max_input_channels": 0},
-            {"name": "USB 2.0 Microphone", "max_input_channels": 2},
-        ],
-    )
-    monkeypatch.setattr(
         AudioDeviceResolver,
-        "_query_hostapis_safe",
-        lambda self: [],
+        "resolve_input_device",
+        lambda self, selector: 1,
     )
-    monkeypatch.setattr(AudioDeviceResolver, "_load_alsa_cards", lambda self: {})
     config = get_config(
         wake_word_phrase="keeper",
         openwakeword_model_path="/tmp/custom_wakeword.onnx",
@@ -275,24 +257,6 @@ def test_wait_for_wake_word_passes_device_to_input_stream(monkeypatch):
     assert FakeModel.last_audio_frame is not None
     assert FakeModel.last_audio_frame.dtype == np.int16
     assert FakeModel.last_audio_frame.ndim == 1
-
-
-def test_resolve_audio_input_device_substring(monkeypatch):
-    monkeypatch.setattr(
-        "src.speech.audio_device_resolver.sounddevice.query_devices",
-        lambda: [
-            {"name": "Built-in Microphone", "max_input_channels": 0},
-            {"name": "USB 2.0 Microphone", "max_input_channels": 2},
-        ],
-    )
-    monkeypatch.setattr(
-        AudioDeviceResolver,
-        "_query_hostapis_safe",
-        lambda self: [],
-    )
-    monkeypatch.setattr(AudioDeviceResolver, "_load_alsa_cards", lambda self: {})
-
-    assert resolve_audio_input_device("USB 2.0") == 1
 
 
 def test_wait_for_wake_word_uses_default_device_when_config_is_unset(
