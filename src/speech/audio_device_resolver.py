@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import re
 import warnings
-from typing import Any
+from typing import Any, Callable
 from collections.abc import Iterable
 
 import sounddevice
@@ -146,10 +146,18 @@ class AudioDeviceResolver:
                 details += f" | aliases: {', '.join(aliases)}"
             print(details)
 
+    def get_device_info_for_index(self, index: int) -> dict[str, Any]:
+        devices = self.list_input_devices()
+        for device in devices:
+            if device["index"] == index:
+                return device
+
+        raise AdapterError(f"Audio input device with index {index} not found.")
+
     def _find_matching_device_index(
         self,
         available_devices: list[dict[str, Any]],
-        matcher: Any,
+        matcher: Callable,
     ) -> int | None:
         for device in available_devices:
             candidates = [device["name"], *device.get("aliases", ())]
