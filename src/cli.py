@@ -4,20 +4,26 @@ from __future__ import annotations
 
 from src.core.config import get_config
 from src.core.logging import CORE_LOGGER, configure_logging
+
 from src.main import run_application
 from src.utils.cli_utilities import resolve_cli_command
 
 
 def main(argv: list[str] | None = None) -> int:
-    config = get_config(debug_mode=True)
-    configure_logging(config)
+    try:
+        config = get_config(debug_mode=True)
+        configure_logging(config)
 
-    command = resolve_cli_command(argv, config)
-    if command.should_dispatch:
-        return command.dispatch()
+        command = resolve_cli_command(argv, config)
+        if command.should_dispatch:
+            return command.dispatch()
 
-    CORE_LOGGER.info("![DEV] Starting KeepClicking CLI runner...\n")
-    return run_application(config)
+        CORE_LOGGER.info("![DEV] Starting KeepClicking CLI runner...\n")
+        return run_application(config)
+
+    except Exception as err:
+        CORE_LOGGER.error("%s", err)
+        return 1
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from src.core.config import AppConfig, get_config
 from src.core.logging import CORE_LOGGER, configure_logging
+
 from src.utils.cli_utilities import resolve_cli_command
 
 
@@ -39,14 +40,21 @@ def run_application(config: AppConfig) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    config = get_config()
-    configure_logging(config)
+    try:
+        config = get_config()
+        configure_logging(config)
 
-    command = resolve_cli_command(argv, config)
-    if command.should_dispatch:
-        return command.dispatch()
+        command = resolve_cli_command(argv, config)
+        if command.should_dispatch:
+            return command.dispatch()
 
-    return run_application(config)
+        CORE_LOGGER.info("Starting KeepClicking application runner...\n")
+        
+        return run_application(config)
+
+    except Exception as err:
+        CORE_LOGGER.error("%s", err)
+        return 1
 
 
 if __name__ == "__main__":
