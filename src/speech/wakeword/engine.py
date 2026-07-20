@@ -155,6 +155,20 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
         scores = self._predict_scores(model, audio_frame)
         return self._extract_score(scores)
 
+    def _monotonic_seconds(self) -> float:
+        return time.monotonic()
+
+    def _raise_if_instant_audio_read(self, read_seconds: float) -> None:
+        if read_seconds > 0.1:
+            return
+
+        raise AdapterError(
+            "Audio device read returned too quickly "
+            f"({read_seconds:.3f}s). The selected audio input "
+            f"({self.device_index}) may not be a functional microphone. "
+            "Choose a different audio_input_device."
+        )
+
     def wait_for_wake_word(self) -> bool:
         model = self.load_model()
         frames = int(self.sample_rate * self.chunk_seconds)
@@ -171,13 +185,20 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
             ADAPTER_LOGGER.info(
                 "Wake-word engine listening on device: %s | model=%s | "
                 "threshold=%.3f",
-                self.device_index,
+                self.audio_device_resolver.get_device_info_for_index(self.device_index),
                 self.model_path,
                 self.threshold,
             )
             
+            waiting_started_at = self._monotonic_seconds()
+            self.seconds_waiting = 0.0
             while True:
+                read_started_at = self._monotonic_seconds()
                 audio, _ = stream.read(frames)
+                self._raise_if_instant_audio_read(
+                    self._monotonic_seconds() - read_started_at
+                )
+
                 model_audio_frame = self._prepare_model_audio_frame(audio)
                 scores = self._predict_scores(model, model_audio_frame)
                 score = self._extract_score(scores)
@@ -186,7 +207,7 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
                     model_audio_frame.astype(np.float32) / 32767.0
                 )
                 ADAPTER_LOGGER.debug(
-                    "[waiting %s] Listening for %s seconds... Wake-word "
+                    "[waiting %s] Listening for %.2f seconds... Wake-word "
                     "score: %.3f | Mic amplitude peak=%.4f, mean=%.4f | "
                     "Model frame dtype=%s, peak=%.4f, mean=%.4f",
                     self.wake_word_phrase,
@@ -202,7 +223,7 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
                     ADAPTER_LOGGER.debug(
                         f"Wake-word raw scores: {self._format_score_details(scores)}",
                     )
-                self.seconds_waiting += self.chunk_seconds
+                self.seconds_waiting = self._monotonic_seconds() - waiting_started_at
 
                 if score >= self.threshold:
                     self.seconds_waiting = 0.0
