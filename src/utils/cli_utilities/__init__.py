@@ -2,7 +2,7 @@
 
 from src.utils.cli_utilities.builder import build_parser
 from src.utils.cli_utilities.handlers import get_cli_command_handlers
-from src.utils.cli_utilities.resolver import resolve_cli_command
+from src.utils.cli_utilities.cli_args_resolver import resolve_cli_command
 from src.utils.cli_utilities.results import CliCommandResult
 
 __all__ = [
