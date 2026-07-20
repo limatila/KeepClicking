@@ -7,7 +7,7 @@ requires-python = ">=3.11,<3.12"
 
 dependencies = [
     "numpy>=2.4.6,<3",
-    "pycaw>=20251023",
+    "pycaw>=20251023; platform_system == 'Windows'",
     "sounddevice>=0.5.5,<0.6",
     "pyautogui>=0.9.54,<1",
     "python-dotenv>=1.2.2,<2",

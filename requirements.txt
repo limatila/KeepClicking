@@ -1,6 +1,5 @@
-# Runtime dependencies
 numpy>=2.4.6,<3
-pycaw>=20251023
+pycaw>=20251023; platform_system == "Windows"
 sounddevice>=0.5.5,<0.6
 pyautogui>=0.9.54,<1
 python-dotenv>=1.2.2,<2
@@ -8,8 +7,3 @@ rapidfuzz>=3.14.1,<4
 openwakeword==0.6.0
 onnxruntime>=1.24.1,<2
 vosk>=0.3.45
-
-# Development dependencies
-pytest>=9.0.3,<10
-faker>=40.19.1,<41
-pyinstaller>=6.16,<7
