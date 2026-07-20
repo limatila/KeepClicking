@@ -1,8 +1,10 @@
 import logging
 import numpy as np
+import pytest
 from pathlib import Path
 
 from src.core.config import get_config
+from src.core.errors import AdapterError
 from src.speech.audio_device_resolver import AudioDeviceResolver
 import src.speech.wakeword.engine as wakeword_engine
 from src.speech.wakeword.engine import OpenWakeWordEngine
@@ -153,6 +155,25 @@ def test_score_frame_returns_max_score_from_dict():
     assert score == 0.8
 
 
+def test_raise_if_instant_audio_read_rejects_too_fast_reads():
+    engine = OpenWakeWordEngine(
+        get_config(audio_input_device=None),
+        chunk_seconds=0.5,
+    )
+
+    with pytest.raises(AdapterError, match="returned too quickly"):
+        engine._raise_if_instant_audio_read(0.1)
+
+
+def test_raise_if_instant_audio_read_allows_normal_reads():
+    engine = OpenWakeWordEngine(
+        get_config(audio_input_device=None),
+        chunk_seconds=0.5,
+    )
+
+    engine._raise_if_instant_audio_read(0.101)
+
+
 def test_wait_for_wake_word_reuses_one_input_stream(monkeypatch):
     config = get_config(
         wake_word_phrase="keeper",
@@ -196,6 +217,7 @@ def test_wait_for_wake_word_reuses_one_input_stream(monkeypatch):
             return np.zeros((frames, 1), dtype=np.float32), False
 
     monkeypatch.setattr(engine, "load_model", lambda: FakeModel())
+    monkeypatch.setattr(engine, "_raise_if_instant_audio_read", lambda read_seconds: None)
     monkeypatch.setattr(wakeword_engine.sounddevice, "InputStream", FakeInputStream)
 
     assert engine.wait_for_wake_word() is True
@@ -249,6 +271,7 @@ def test_wait_for_wake_word_passes_device_to_input_stream(monkeypatch):
             return np.zeros((frames, 1), dtype=np.float32), False
 
     monkeypatch.setattr(engine, "load_model", lambda: FakeModel())
+    monkeypatch.setattr(engine, "_raise_if_instant_audio_read", lambda read_seconds: None)
     monkeypatch.setattr(wakeword_engine.sounddevice, "InputStream", FakeInputStream)
 
     assert engine.wait_for_wake_word() is True
@@ -262,6 +285,11 @@ def test_wait_for_wake_word_passes_device_to_input_stream(monkeypatch):
 def test_wait_for_wake_word_uses_default_device_when_config_is_unset(
     monkeypatch,
 ):
+    monkeypatch.setattr(
+        AudioDeviceResolver,
+        "resolve_input_device",
+        lambda self, selector: None,
+    )
     config = get_config(
         wake_word_phrase="keeper",
         openwakeword_model_path="/tmp/custom_wakeword.onnx",
@@ -294,6 +322,7 @@ def test_wait_for_wake_word_uses_default_device_when_config_is_unset(
             return np.zeros((frames, 1), dtype=np.float32), False
 
     monkeypatch.setattr(engine, "load_model", lambda: FakeModel())
+    monkeypatch.setattr(engine, "_raise_if_instant_audio_read", lambda read_seconds: None)
     monkeypatch.setattr(wakeword_engine.sounddevice, "InputStream", FakeInputStream)
 
     assert engine.wait_for_wake_word() is True
@@ -331,6 +360,7 @@ def test_wait_for_wake_word_logs_raw_dict_scores(monkeypatch, caplog):
             return np.zeros((frames, 1), dtype=np.float32), False
 
     monkeypatch.setattr(engine, "load_model", lambda: FakeModel())
+    monkeypatch.setattr(engine, "_raise_if_instant_audio_read", lambda read_seconds: None)
     monkeypatch.setattr(wakeword_engine.sounddevice, "InputStream", FakeInputStream)
 
     with caplog.at_level(logging.DEBUG, logger="baseLogger.adapter"):
@@ -341,3 +371,42 @@ def test_wait_for_wake_word_logs_raw_dict_scores(monkeypatch, caplog):
         "Wake-word 'hey keeper' detected!" in record.message
         for record in caplog.records
     )
+
+
+def test_wait_for_wake_word_raises_user_message_on_instant_audio_read(monkeypatch):
+    config = get_config(
+        wake_word_phrase="keeper",
+        openwakeword_model_path="/tmp/custom_wakeword.onnx",
+        audio_input_device=None,
+    )
+    engine = OpenWakeWordEngine(
+        config,
+        threshold=0.5,
+        sample_rate=16000,
+        chunk_seconds=0.25,
+    )
+    monotonic_values = iter([9.0, 10.0, 10.05])
+
+    class FakeModel:
+        def predict(self, audio_frame):
+            raise AssertionError("Instant audio reads should fail before scoring")
+
+    class FakeInputStream:
+        def __init__(self, *args, **kwargs):
+            self.blocksize = kwargs["blocksize"]
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self, frames):
+            return np.zeros((frames, 1), dtype=np.float32), False
+
+    monkeypatch.setattr(engine, "load_model", lambda: FakeModel())
+    monkeypatch.setattr(engine, "_monotonic_seconds", lambda: next(monotonic_values))
+    monkeypatch.setattr(wakeword_engine.sounddevice, "InputStream", FakeInputStream)
+
+    with pytest.raises(AdapterError, match="may not be a functional microphone"):
+        engine.wait_for_wake_word()
