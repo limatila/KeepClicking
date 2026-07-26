@@ -53,7 +53,7 @@ def main(argv: list[str] | None = None) -> int:
         return run_application(config)
 
     except Exception as err:
-        CORE_LOGGER.error("%s", err)
+        CORE_LOGGER.error(f"KeepClicking failed: {str(err)}")
         return 1
 
 
