@@ -47,6 +47,7 @@ Prepare and validate the first production packaging target for local use.
 	- `src/resources/models/openwakeword/melspectrogram.onnx`
 	- `src/resources/models/openwakeword/embedding_model.onnx`
 	- `src/resources/models/vosk/vosk-model-small-en-us-0.15`
+- Collect Vosk package binaries/data so `vosk/libvosk.dll` is available where Vosk's loader expects it.
 - Use `packaging/hooks/hook-sklearn.py` to omit non-runtime sklearn dataset/test data from the PyInstaller artifact.
 - Exclude production-irrelevant files and modules:
 	- `.venv`, `.cache`, `.tmp_pytest`, `.pytest_cache`
@@ -71,6 +72,7 @@ Portable build command:
 - `dist/KeepClicking.exe --list-audio-devices` exits successfully.
 - Production executable is windowed and built from `src/main.py`.
 - Archive inspection finds no forbidden project/dev paths, old wake-word model, PT Vosk model, or sklearn dataset test data.
+- Archive inspection confirms `vosk/libvosk.dll` is bundled.
 
 ## Manual validation
 
@@ -78,6 +80,7 @@ Portable build command:
 - Production entrypoint smokes: pass on 2026-07-20.
 - Packaged executable smokes: pass by exit code on 2026-07-20.
 - Archive exclusion check: pass on 2026-07-20.
+- Packaged startup check: pass on 2026-07-20; windowed EXE stayed alive and reached wake-word listening.
 - Live speech/manual mouse pass is tracked by spec 016 and remains a human validation step.
 
 ## Dependencies
