@@ -15,8 +15,9 @@ Prepare and validate the first production packaging target for local use.
 
 ## Scope
 
-- Build a Windows windowed executable from `src/main.py`.
+- Build Windows windowed executables from `src/main.py`.
 - Bundle runtime model resources.
+- Bundle language-specific production defaults with the packaged app.
 - Keep dev/test/cache/repository files out of the production artifact.
 - Document development setup separately from production packaging.
 
@@ -33,8 +34,11 @@ Prepare and validate the first production packaging target for local use.
 
 ## Outputs
 
-- `dist/KeepClicking.exe`
+- `dist/KeepClicking-en-us.exe`
+- `dist/KeepClicking-pt-br.exe`
 - `scripts/build_exe.ps1`
+- `packaging/env/en-us/packaged.env`
+- `packaging/env/pt-br/packaged.env`
 - Updated README production/development sections.
 - Updated validation checklist and package smoke results.
 
@@ -42,13 +46,18 @@ Prepare and validate the first production packaging target for local use.
 
 - Follow ADR decision in `021-adr-packaging-toolchain.md`: use PyInstaller.
 - Build from `src/main.py` with windowed mode.
-- Include only the default production model data:
+- Produce separate EXEs for `en-us` and `pt-br`.
+- Include OpenWakeWord production runtime data in both packages:
 	- `src/resources/models/openwakeword/hey_keeper_v2.onnx`
 	- `src/resources/models/openwakeword/melspectrogram.onnx`
 	- `src/resources/models/openwakeword/embedding_model.onnx`
-	- `src/resources/models/vosk/vosk-model-small-en-us-0.15`
+- Include only the matching Vosk model per EXE:
+	- `dist/KeepClicking-en-us.exe` bundles `src/resources/models/vosk/vosk-model-small-en-us-0.15`
+	- `dist/KeepClicking-pt-br.exe` bundles `src/resources/models/vosk/vosk-model-small-pt-0.3`
+- Bundle a packaged production env per EXE so language/model defaults are baked in while still allowing external `.env` overrides beside the EXE.
 - Collect Vosk package binaries/data so `vosk/libvosk.dll` is available where Vosk's loader expects it.
 - Use `packaging/hooks/hook-sklearn.py` to omit non-runtime sklearn dataset/test data from the PyInstaller artifact.
+- In production (`debug_mode=false`), write runtime logs to per-run files under `~/Documents/keepclicking_logs`, with fallback to another writable local path if needed.
 - Exclude production-irrelevant files and modules:
 	- `.venv`, `.cache`, `.tmp_pytest`, `.pytest_cache`
 	- `.gitignore`, `.python-version`, `pytest.ini`, `rewrite-email.ps1`, `uv.lock`
@@ -63,24 +72,34 @@ Portable build command:
 .\scripts\build_exe.ps1
 ```
 
+Single-variant build commands:
+
+```powershell
+.\scripts\build_exe.ps1 -Variant en-us
+.\scripts\build_exe.ps1 -Variant pt-br
+```
+
 ## Acceptance criteria
 
 - `uv run pytest` passes.
 - `uv run python -m src.main -h` exits successfully.
 - `uv run python -m src.main --list-audio-devices` exits successfully.
-- `dist/KeepClicking.exe -h` exits successfully.
-- `dist/KeepClicking.exe --list-audio-devices` exits successfully.
-- Production executable is windowed and built from `src/main.py`.
-- Archive inspection finds no forbidden project/dev paths, old wake-word model, PT Vosk model, or sklearn dataset test data.
+- `dist/KeepClicking-en-us.exe -h` exits successfully.
+- `dist/KeepClicking-en-us.exe --list-audio-devices` exits successfully.
+- `dist/KeepClicking-pt-br.exe -h` exits successfully.
+- `dist/KeepClicking-pt-br.exe --list-audio-devices` exits successfully.
+- Production executables are windowed and built from `src/main.py`.
+- Archive inspection finds no forbidden project/dev paths, old wake-word model, or sklearn dataset test data.
+- The `en-us` package excludes the PT Vosk model; the `pt-br` package excludes the EN Vosk model.
 - Archive inspection confirms `vosk/libvosk.dll` is bundled.
 
 ## Manual validation
 
-- Automated tests: pass, 86 passed on 2026-07-20.
-- Production entrypoint smokes: pass on 2026-07-20.
-- Packaged executable smokes: pass by exit code on 2026-07-20.
-- Archive exclusion check: pass on 2026-07-20.
-- Packaged startup check: pass on 2026-07-20; windowed EXE stayed alive and reached wake-word listening.
+- Automated tests: pass, 89 passed on July 26, 2026.
+- Production entrypoint smokes: pass on July 26, 2026.
+- Packaged executable smokes: pass by exit code on July 26, 2026 for `KeepClicking-en-us.exe` and `KeepClicking-pt-br.exe`.
+- Archive exclusion check: pass on July 26, 2026. The `en-us` package contains only the EN Vosk model; the `pt-br` package contains only the PT Vosk model; both include `packaged.env` and `vosk/libvosk.dll`.
+- Packaged startup/logging check: pass on July 26, 2026. Production runs created `run_N.log` files. On this Windows machine, `~/Documents` was unavailable, so the runtime correctly fell back to `%TEMP%\\KeepClicking\\keepclicking_logs`.
 - Live speech/manual mouse pass is tracked by spec 016 and remains a human validation step.
 
 ## Dependencies

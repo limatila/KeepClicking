@@ -16,6 +16,7 @@ Validate the MVP in a real desktop environment and keep a validation record unde
 
 - Maintain a validation checklist for speech-first mode.
 - Include production entrypoint and packaged executable smoke checks.
+- Track both packaged language variants.
 - Keep dev-only CLI checks separate from production validation.
 
 ## Out of scope
@@ -27,7 +28,7 @@ Validate the MVP in a real desktop environment and keep a validation record unde
 
 - Built MVP speech pipeline using `src/main.py`.
 - Dev-only harness in `src/cli.py`.
-- Packaged local executable in `dist/KeepClicking.exe`.
+- Packaged local executables in `dist/KeepClicking-en-us.exe` and `dist/KeepClicking-pt-br.exe`.
 
 ## Outputs
 
@@ -47,6 +48,7 @@ Validate the MVP in a real desktop environment and keep a validation record unde
 	- Movement: `200` pixels
 	- Scroll: `350` units
 	- Audio input: system default when `audio_input_device` is unset
+	- Production logs: per-run files under `~/Documents/keepclicking_logs`
 - Mark automated command-path coverage separately from live speech/manual mouse validation.
 
 ## Acceptance criteria
@@ -57,9 +59,9 @@ Validate the MVP in a real desktop environment and keep a validation record unde
 
 ## Manual validation
 
-- Automated preflight completed on 2026-07-20: `uv run pytest` passed with 86 tests.
-- Production module smokes completed on 2026-07-20.
-- Packaged executable smokes completed on 2026-07-20.
+- Automated preflight completed on July 26, 2026: `uv run pytest` passed with 89 tests.
+- Production module smokes completed on July 26, 2026.
+- Packaged executable smokes completed on July 26, 2026 for both language variants.
 - Live speech/manual mouse validation: not run in this agent session.
 
 ## Dependencies
