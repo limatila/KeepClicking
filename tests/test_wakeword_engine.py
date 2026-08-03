@@ -93,7 +93,6 @@ def test_resolve_openwakeword_feature_models_downloads_missing_assets(
 ):
     package_root = tmp_path / "package"
     package_root.mkdir()
-    cache_dir = tmp_path / "cache"
     created_downloads = []
 
     class FakeOpenWakeWord:
@@ -112,17 +111,14 @@ def test_resolve_openwakeword_feature_models_downloads_missing_assets(
         Path(target_directory, url.rsplit("/", 1)[-1]).write_bytes(b"model")
 
     monkeypatch.setattr(wakeword_engine, "openwakeword", FakeOpenWakeWord)
-    monkeypatch.setattr(
-        wakeword_engine,
-        "OPENWAKEWORD_MODEL_DIR",
-        package_root / "resources" / "models",
-    )
-    monkeypatch.setattr(wakeword_engine, "OPENWAKEWORD_CACHE_DIR", cache_dir)
+    monkeypatch.setattr(wakeword_engine, "OPENWAKEWORD_PACKAGED_MODEL_DIR", package_root / "resources" / "models")
+    monkeypatch.setattr(wakeword_engine, "OPENWAKEWORD_LIB_MODEL_DIR", package_root / "library-models")
     monkeypatch.setattr(wakeword_engine, "download_file", fake_download)
 
-    engine = OpenWakeWordEngine(get_config(audio_input_device=None))
+    engine = OpenWakeWordEngine(get_config(audio_input_device=None, runtime_dir=tmp_path / "runtime"))
     melspec_path, embedding_path = engine._resolve_openwakeword_feature_models()
 
+    cache_dir = engine.config.openwakeword_cache_dir
     assert Path(melspec_path) == cache_dir / "melspectrogram.onnx"
     assert Path(embedding_path) == cache_dir / "embedding_model.onnx"
     assert created_downloads == [

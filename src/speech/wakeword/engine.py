@@ -12,7 +12,11 @@ import sounddevice
 from openwakeword import Model
 from openwakeword.utils import download_file
 
-from src.core.config import AppConfig, OPENWAKEWORD_LIB_CACHE_DIR, OPENWAKEWORD_LIB_MODEL_DIR
+from src.core.config import (
+    AppConfig,
+    OPENWAKEWORD_LIB_MODEL_DIR,
+    OPENWAKEWORD_PACKAGED_MODEL_DIR,
+)
 from src.core.errors import AdapterError
 from src.core.logging import ADAPTER_LOGGER
 from src.speech.interfaces import (
@@ -25,6 +29,7 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
     """OpenWakeWord-based wake-word detector."""
 
     def __init__(self, config: AppConfig, threshold: float = 0.35, sample_rate: int = 16000, chunk_seconds: float = 0.5):
+        self.config = config
         self.wake_word_phrase = config.wake_word_phrase
         self.model_path = str(config.openwakeword_model_path)
         self.threshold = threshold
@@ -35,13 +40,14 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
         self.device_index = self.resolve_input_device(config.audio_input_device)
 
     def _resolve_openwakeword_feature_models(self) -> tuple[str, str]:
-        packaged_melspec_path = OPENWAKEWORD_LIB_MODEL_DIR / "melspectrogram.onnx"
-        packaged_embedding_path = OPENWAKEWORD_LIB_MODEL_DIR / "embedding_model.onnx"
-        if packaged_melspec_path.exists() and packaged_embedding_path.exists():
-            return str(packaged_melspec_path), str(packaged_embedding_path)
+        for model_dir in (OPENWAKEWORD_PACKAGED_MODEL_DIR, OPENWAKEWORD_LIB_MODEL_DIR):
+            melspec_path = model_dir / "melspectrogram.onnx"
+            embedding_path = model_dir / "embedding_model.onnx"
+            if melspec_path.exists() and embedding_path.exists():
+                return str(melspec_path), str(embedding_path)
 
-        cache_melspec_path = OPENWAKEWORD_LIB_CACHE_DIR / "melspectrogram.onnx"
-        cache_embedding_path = OPENWAKEWORD_LIB_CACHE_DIR / "embedding_model.onnx"
+        cache_melspec_path = self.config.openwakeword_cache_dir / "melspectrogram.onnx"
+        cache_embedding_path = self.config.openwakeword_cache_dir / "embedding_model.onnx"
         missing_assets = {
             "melspectrogram": cache_melspec_path,
             "embedding": cache_embedding_path,
@@ -58,7 +64,7 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
         return str(cache_melspec_path), str(cache_embedding_path)
 
     def _download_openwakeword_feature_models(self, target_paths: dict[str, Path]) -> None:
-        OPENWAKEWORD_LIB_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        self.config.openwakeword_cache_dir.mkdir(parents=True, exist_ok=True)
         try:
             for asset_name, target_path in target_paths.items():
                 if target_path.exists():
@@ -72,13 +78,14 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
                     target_path.name,
                     target_path,
                 )
-                download_file(download_url, str(OPENWAKEWORD_LIB_CACHE_DIR))
+                download_file(download_url, str(self.config.openwakeword_cache_dir))
         except Exception as err:
             raise AdapterError(
                 "OpenWakeWord support assets are missing and could not be "
                 "downloaded automatically. "
-                f"Checked '{OPENWAKEWORD_LIB_MODEL_DIR}' and "
-                f"'{OPENWAKEWORD_LIB_CACHE_DIR}'."
+                f"Checked '{OPENWAKEWORD_PACKAGED_MODEL_DIR}', "
+                f"'{OPENWAKEWORD_LIB_MODEL_DIR}', and "
+                f"'{self.config.openwakeword_cache_dir}'."
             ) from err
 
     def load_model(self) -> Model:
@@ -162,12 +169,21 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
         if read_seconds > 0.1:
             return
 
+        selected_device = (
+            "system default" if self.device_index is None else str(self.device_index)
+        )
         raise AdapterError(
             "Audio device read returned too quickly "
             f"({read_seconds:.3f}s). The selected audio input "
-            f"({self.device_index}) may not be a functional microphone. "
+            f"({selected_device}) may not be a functional microphone. "
             "Choose a different audio_input_device."
         )
+
+    def _format_device_info_log(self) -> object:
+        if self.device_index is None:
+            return "system default"
+
+        return self.audio_device_resolver.get_device_info_for_index(self.device_index)
 
     def wait_for_wake_word(self) -> bool:
         model = self.load_model()
@@ -185,7 +201,7 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
             ADAPTER_LOGGER.info(
                 "Wake-word engine listening on device: %s | model=%s | "
                 "threshold=%.3f",
-                self.audio_device_resolver.get_device_info_for_index(self.device_index),
+                self._format_device_info_log(),
                 self.model_path,
                 self.threshold,
             )

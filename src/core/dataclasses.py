@@ -3,8 +3,7 @@ from dataclasses import dataclass
 from src.core.choices import BaseCommandAction, CommandDirection, MouseCommandAction
 from src.core.config import get_config
 
-app_config = get_config()
-
+APP_CONFIG = get_config()
 
 @dataclass(slots=True)
 class BaseCommand:
@@ -26,16 +25,13 @@ class MouseCommand(BaseCommand):
         if self.amount is not None:
             return
 
+
         amount_per_type: dict[MouseCommandAction, int] = {
             MouseCommandAction.STOP: 0,
             MouseCommandAction.CLICK: 1,
             MouseCommandAction.DOUBLE_CLICK: 2,
             MouseCommandAction.RIGHT_CLICK: 1,
-            MouseCommandAction.SCROLL: (
-                app_config.mouse_scroll_units if app_config else 0
-            ),
-            MouseCommandAction.MOVE: (
-                app_config.mouse_movement_pixels if app_config else 0
-            ),
+            MouseCommandAction.SCROLL: APP_CONFIG.mouse_scroll_units,
+            MouseCommandAction.MOVE: APP_CONFIG.mouse_movement_pixels,
         }
         self.amount = amount_per_type.get(self.action, self.amount)
