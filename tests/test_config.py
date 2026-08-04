@@ -73,6 +73,7 @@ def test_get_config_parses_env_values(monkeypatch):
             "mouse_movement_pixels": "75",
             "mouse_scroll_units": "425",
             "wake_word_listen_seconds": "2.5",
+            "wake_word_notification_sound": "false",
             "audio_input_device": "USB 2.0",
             "speech_language": "pt-br",
         }),
@@ -89,6 +90,7 @@ def test_get_config_parses_env_values(monkeypatch):
         mouse_movement_pixels=75,
         mouse_scroll_units=425,
         wake_word_listen_seconds=2.5,
+        wake_word_notification=False,
         audio_input_device="USB 2.0",
         speech_language=SpeechLanguage.PT_BR,
     )

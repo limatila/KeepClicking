@@ -23,6 +23,7 @@ from src.speech.interfaces import (
     CustumizableAudioInputMixin,
     WakeWordEngineInterface,
 )
+from src.speech.notifications import build_notification_sound_player
 
 
 class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
@@ -35,6 +36,7 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
         self.threshold = threshold
         self.sample_rate = sample_rate
         self.chunk_seconds = chunk_seconds
+        self.notification_sound_player = build_notification_sound_player()
         self.model: Model = None
         self.seconds_waiting = 0.0
         self.device_index = self.resolve_input_device(config.audio_input_device)
@@ -185,6 +187,17 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
 
         return self.audio_device_resolver.get_device_info_for_index(self.device_index)
 
+    def _play_wake_word_notification_sound(self) -> None:
+        if not self.config.wake_word_notification:
+            return
+
+        try:
+            self.notification_sound_player.play_wake_word_detected()
+        except Exception as err:
+            ADAPTER_LOGGER.warning(
+                f"Wake-word notification sound failed: {str(err)}",
+            )
+
     def wait_for_wake_word(self) -> bool:
         model = self.load_model()
         frames = int(self.sample_rate * self.chunk_seconds)
@@ -244,5 +257,6 @@ class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
                 if score >= self.threshold:
                     self.seconds_waiting = 0.0
                     ADAPTER_LOGGER.info(f"Wake-word '{self.wake_word_phrase}' detected!")
+                    self._play_wake_word_notification_sound()
                     
                     return True

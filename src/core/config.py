@@ -47,6 +47,7 @@ class AppConfig:
     openwakeword_model_path: str = str(DEFAULT_OPENWAKEWORD_MODEL_PATH)
     offline_model_path: str = str(DEFAULT_OFFLINE_MODEL_PATH)
     wake_word_phrase: str = "hey keeper"
+    wake_word_notification: bool = True
     wake_word_listen_seconds: float = 3.0
     pyautogui_pause_seconds: float = 0.1
     pyautogui_failsafe: bool = True

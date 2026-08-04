@@ -10,6 +10,17 @@ import src.speech.wakeword.engine as wakeword_engine
 from src.speech.wakeword.engine import OpenWakeWordEngine
 
 
+class FakeNotificationSoundPlayer:
+    def __init__(self, error: Exception | None = None):
+        self.calls = 0
+        self.error = error
+
+    def play_wake_word_detected(self) -> None:
+        self.calls += 1
+        if self.error is not None:
+            raise self.error
+
+
 def test_load_model_uses_configured_model_path(monkeypatch):
     created_models = []
     config = get_config(
@@ -219,6 +230,136 @@ def test_wait_for_wake_word_reuses_one_input_stream(monkeypatch):
     assert engine.wait_for_wake_word() is True
     assert FakeInputStream.instances == 1
     assert FakeInputStream.read_calls == 2
+
+
+def test_wait_for_wake_word_plays_notification_sound_on_detection(monkeypatch):
+    config = get_config(
+        wake_word_phrase="keeper",
+        openwakeword_model_path="/tmp/custom_wakeword.onnx",
+        audio_input_device=None,
+    )
+    notification_sound_player = FakeNotificationSoundPlayer()
+    engine = OpenWakeWordEngine(
+        config,
+        threshold=0.5,
+        sample_rate=16000,
+        chunk_seconds=0.25,
+        notification_sound_player=notification_sound_player,
+    )
+
+    class FakeModel:
+        def predict(self, audio_frame):
+            return 0.9
+
+    class FakeInputStream:
+        def __init__(self, *args, **kwargs):
+            self.blocksize = kwargs["blocksize"]
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self, frames):
+            return np.zeros((frames, 1), dtype=np.float32), False
+
+    monkeypatch.setattr(engine, "load_model", lambda: FakeModel())
+    monkeypatch.setattr(engine, "_raise_if_instant_audio_read", lambda read_seconds: None)
+    monkeypatch.setattr(wakeword_engine.sounddevice, "InputStream", FakeInputStream)
+
+    assert engine.wait_for_wake_word() is True
+    assert notification_sound_player.calls == 1
+
+
+def test_wait_for_wake_word_skips_notification_sound_when_disabled(monkeypatch):
+    config = get_config(
+        wake_word_phrase="keeper",
+        openwakeword_model_path="/tmp/custom_wakeword.onnx",
+        audio_input_device=None,
+        wake_word_notification_sound=False,
+    )
+    notification_sound_player = FakeNotificationSoundPlayer()
+    engine = OpenWakeWordEngine(
+        config,
+        threshold=0.5,
+        sample_rate=16000,
+        chunk_seconds=0.25,
+        notification_sound_player=notification_sound_player,
+    )
+
+    class FakeModel:
+        def predict(self, audio_frame):
+            return 0.9
+
+    class FakeInputStream:
+        def __init__(self, *args, **kwargs):
+            self.blocksize = kwargs["blocksize"]
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self, frames):
+            return np.zeros((frames, 1), dtype=np.float32), False
+
+    monkeypatch.setattr(engine, "load_model", lambda: FakeModel())
+    monkeypatch.setattr(engine, "_raise_if_instant_audio_read", lambda read_seconds: None)
+    monkeypatch.setattr(wakeword_engine.sounddevice, "InputStream", FakeInputStream)
+
+    assert engine.wait_for_wake_word() is True
+    assert notification_sound_player.calls == 0
+
+
+def test_wait_for_wake_word_continues_when_notification_sound_fails(
+    monkeypatch,
+    caplog,
+):
+    config = get_config(
+        wake_word_phrase="keeper",
+        openwakeword_model_path="/tmp/custom_wakeword.onnx",
+        audio_input_device=None,
+    )
+    notification_sound_player = FakeNotificationSoundPlayer(RuntimeError("no sound"))
+    engine = OpenWakeWordEngine(
+        config,
+        threshold=0.5,
+        sample_rate=16000,
+        chunk_seconds=0.25,
+        notification_sound_player=notification_sound_player,
+    )
+
+    class FakeModel:
+        def predict(self, audio_frame):
+            return 0.9
+
+    class FakeInputStream:
+        def __init__(self, *args, **kwargs):
+            self.blocksize = kwargs["blocksize"]
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self, frames):
+            return np.zeros((frames, 1), dtype=np.float32), False
+
+    monkeypatch.setattr(engine, "load_model", lambda: FakeModel())
+    monkeypatch.setattr(engine, "_raise_if_instant_audio_read", lambda read_seconds: None)
+    monkeypatch.setattr(wakeword_engine.sounddevice, "InputStream", FakeInputStream)
+
+    with caplog.at_level(logging.WARNING, logger="baseLogger.adapter"):
+        assert engine.wait_for_wake_word() is True
+
+    assert notification_sound_player.calls == 1
+    assert any(
+        "Wake-word notification sound failed: no sound" in record.message
+        for record in caplog.records
+    )
 
 
 def test_wait_for_wake_word_passes_device_to_input_stream(monkeypatch):
