@@ -38,6 +38,13 @@ class AudioDeviceResolver:
             requested_index = None
 
         devices = self.list_input_devices()
+        
+        if not devices:
+            raise AdapterError(
+                "No input-capable audio devices were found. "
+                "Please check your system settings and ensure that a microphone is connected."
+            )
+        
         for device in devices:
             if requested_index is None:
                 return device["index"]
