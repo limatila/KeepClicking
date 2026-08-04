@@ -36,7 +36,7 @@ DEFAULT_LOG_FORMAT = "[%(levelname)s] | %(name)s -|- %(message)s"
 PATH_ENV_FIELDS = frozenset({"openwakeword_model_path", "offline_model_path"})
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class AppConfig:
     """Defines runtime configuration defaults and the application runtime root."""
 
