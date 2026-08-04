@@ -108,6 +108,27 @@ class AppConfig:
         root.mkdir(parents=True, exist_ok=True)
         return root
 
+    def display(self):
+        """Display text of the current configuration to stdout."""
+        display_text = "\n"
+        
+        display_text += ("Runtime Active Configuration:") + " | "
+        
+        display_text += (f"Runtime Dir: {self.runtime_dir}") + " | "
+        display_text += (f"Env Path: {self.env_path}") + " | "
+        display_text += (f"Log Dir: {self.log_dir}") + " | "
+        
+        display_text += (f"OpenWakeWord Cache Dir: {self.openwakeword_cache_dir}") + " | "
+        
+        display_text += ("Configuration Values= ")
+        for config_field in fields(self):
+            if config_field.name.startswith("_"):
+                continue
+            value = getattr(self, config_field.name)
+            display_text += (f"{config_field.name}: {value}") + " | "
+        
+        return display_text
+
     @classmethod
     def from_env(cls) -> AppConfig:
         env_values = cls.read_env_values()

@@ -35,7 +35,10 @@ def run_application(config: AppConfig) -> int:
     """Run the interactive voice pipeline."""
 
     CORE_LOGGER.info("Starting KeepClicking application runner...")
+    CORE_LOGGER.info(config.display())
+
     build_application_runner(config).run()
+
     return 0
 
 
@@ -45,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
         configure_logging(config)
 
         command = resolve_cli_command(argv, config)
-        if command.should_dispatch:
+        if command.should_dispatch: 
             return command.dispatch()
 
         CORE_LOGGER.info("Starting KeepClicking application runner...\n")
