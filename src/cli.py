@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.core.config import get_config
+from src.core.config import ROOT_PATH, get_config
 from src.core.logging import CORE_LOGGER, configure_logging
 
 from src.main import run_application
@@ -11,7 +11,11 @@ from src.utils.cli_utilities import resolve_cli_command
 
 def main(argv: list[str] | None = None) -> int:
     try:
-        config = get_config(debug_mode=True)
+        config = get_config(
+            source_env_path=ROOT_PATH / ".env",
+            seed_user_env=False,
+            debug_mode=True,
+        )
         configure_logging(config)
 
         command = resolve_cli_command(argv, config)

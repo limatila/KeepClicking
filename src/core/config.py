@@ -20,6 +20,7 @@ BUNDLED_ENV_FILE_NAME = "packaged.env"
 BUNDLED_ENV_PATH = ROOT_PATH / BUNDLED_ENV_FILE_NAME
 
 MODELS_PATH = ROOT_PATH / "src" / "resources" / "models"
+ASSETS_PATH = ROOT_PATH / "src" / "resources" / "assets"
 
 OPENWAKEWORD_PACKAGED_MODEL_DIR = MODELS_PATH / "openwakeword"
 OPENWAKEWORD_LIB_MODEL_DIR = (
@@ -32,6 +33,7 @@ DEFAULT_OPENWAKEWORD_MODEL_PATH = (
 DEFAULT_OFFLINE_MODEL_PATH = (
     MODELS_PATH / "vosk" / "vosk-model-small-en-us-0.15"
 )
+DEFAULT_NOTIFICATION_SOUND_PATH = ASSETS_PATH / "notify.mp3"
 DEFAULT_LOG_FORMAT = "[%(levelname)s] | %(name)s -|- %(message)s"
 PATH_ENV_FIELDS = frozenset({"openwakeword_model_path", "offline_model_path"})
 
@@ -89,7 +91,7 @@ class AppConfig:
 
     def __post_init__(self) -> None:
         runtime_dir = Path(self.runtime_dir).resolve()
-        env_path = runtime_dir / ".env"
+        env_path = Path(self.env_path).resolve() if self.env_path else runtime_dir / ".env"
         log_dir = runtime_dir / "logs"
         cache_dir = runtime_dir / ".cache" / "models" / "openwakeword"
 
@@ -131,8 +133,19 @@ class AppConfig:
         return display_text
 
     @classmethod
-    def from_env(cls) -> AppConfig:
-        env_values = cls.read_env_values()
+    def from_env(
+        cls,
+        source_env_path: Path | None = None,
+        seed_user_env: bool = True,
+    ) -> AppConfig:
+        if source_env_path is None and seed_user_env:
+            env_values = cls.read_env_values()
+        else:
+            env_values = cls.read_env_values(
+                source_env_path=source_env_path,
+                seed_user_env=seed_user_env,
+            )
+
         field_types = get_type_hints(cls)
         parsed_values = {
             config_field.name: cls._parse_field_env_value(
@@ -141,21 +154,32 @@ class AppConfig:
             for config_field in fields(cls)
             if config_field.init and config_field.name != "runtime_dir"
         }
+        if source_env_path is not None:
+            parsed_values["env_path"] = Path(source_env_path).resolve()
+
         return cls(**parsed_values)
 
     @classmethod
-    def read_env_values(cls) -> dict[str, str | None]:
+    def read_env_values(
+        cls,
+        source_env_path: Path | None = None,
+        seed_user_env: bool = True,
+    ) -> dict[str, str | None]:
         runtime_dir = cls.appdata_runtime_dir()
-        user_env_path = runtime_dir / ".env"
-        bundled_env_path = BUNDLED_ENV_PATH
+        user_env_path = (
+            Path(source_env_path).resolve()
+            if source_env_path is not None
+            else runtime_dir / ".env"
+        )
+        bundled_env_path = ROOT_PATH / BUNDLED_ENV_FILE_NAME
 
-        if not user_env_path.exists():
+        if seed_user_env and not user_env_path.exists():
             cls._seed_user_env_file(user_env_path, bundled_env_path)
 
         merged_env_values: dict[str, str | None] = {}
         for env_values, base_dir in (
             (cls._read_env_file(bundled_env_path), bundled_env_path.parent),
-            (cls._read_env_file(user_env_path), runtime_dir),
+            (cls._read_env_file(user_env_path), user_env_path.parent),
         ):
             merged_env_values.update(
                 cls._resolve_env_path_fields(env_values, base_dir)
@@ -271,9 +295,17 @@ def get_env_or_default(key: str, default: Any) -> Any:
     env_values = AppConfig.read_env_values()
     return AppConfig._normalize_env_value(env_values.get(key)) or default
 
-def get_config(base: AppConfig | None = None, **overrides: object) -> AppConfig:
+def get_config(
+    base: AppConfig | None = None,
+    source_env_path: Path | None = None,
+    seed_user_env: bool = True,
+    **overrides: object,
+) -> AppConfig:
     """Return the current config with optional overrides."""
-    config = base or AppConfig.from_env()
+    config = base or AppConfig.from_env(
+        source_env_path=source_env_path,
+        seed_user_env=seed_user_env,
+    )
     
     if overrides:
         return replace(config, **overrides)

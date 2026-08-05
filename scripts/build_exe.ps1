@@ -8,6 +8,7 @@ $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $OpenWakeWordModelRoot = Join-Path $ProjectRoot "src\resources\models\openwakeword"
+$AssetRoot = Join-Path $ProjectRoot "src\resources\assets"
 $VoskModelRoot = Join-Path $ProjectRoot "src\resources\models\vosk"
 $PackagingEnvRoot = Join-Path $ProjectRoot "packaging\env"
 $env:UV_CACHE_DIR = Join-Path $ProjectRoot ".tmp_uv_cache"
@@ -24,6 +25,7 @@ $CommonArgs = @(
     "--add-data", "$OpenWakeWordModelRoot\hey_keeper_v2.onnx;src/resources/models/openwakeword",
     "--add-data", "$OpenWakeWordModelRoot\melspectrogram.onnx;src/resources/models/openwakeword",
     "--add-data", "$OpenWakeWordModelRoot\embedding_model.onnx;src/resources/models/openwakeword",
+    "--add-data", "$AssetRoot\notify.mp3;src/resources/assets",
     "--exclude-module", "src.cli",
     "--exclude-module", "tests",
     "--exclude-module", "pytest",

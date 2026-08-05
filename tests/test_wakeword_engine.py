@@ -244,8 +244,8 @@ def test_wait_for_wake_word_plays_notification_sound_on_detection(monkeypatch):
         threshold=0.5,
         sample_rate=16000,
         chunk_seconds=0.25,
-        notification_sound_player=notification_sound_player,
     )
+    engine.notification_sound_player = notification_sound_player
 
     class FakeModel:
         def predict(self, audio_frame):
@@ -277,7 +277,7 @@ def test_wait_for_wake_word_skips_notification_sound_when_disabled(monkeypatch):
         wake_word_phrase="keeper",
         openwakeword_model_path="/tmp/custom_wakeword.onnx",
         audio_input_device=None,
-        wake_word_notification_sound=False,
+        wake_word_notification=False,
     )
     notification_sound_player = FakeNotificationSoundPlayer()
     engine = OpenWakeWordEngine(
@@ -285,8 +285,8 @@ def test_wait_for_wake_word_skips_notification_sound_when_disabled(monkeypatch):
         threshold=0.5,
         sample_rate=16000,
         chunk_seconds=0.25,
-        notification_sound_player=notification_sound_player,
     )
+    engine.notification_sound_player = notification_sound_player
 
     class FakeModel:
         def predict(self, audio_frame):
@@ -328,8 +328,8 @@ def test_wait_for_wake_word_continues_when_notification_sound_fails(
         threshold=0.5,
         sample_rate=16000,
         chunk_seconds=0.25,
-        notification_sound_player=notification_sound_player,
     )
+    engine.notification_sound_player = notification_sound_player
 
     class FakeModel:
         def predict(self, audio_frame):

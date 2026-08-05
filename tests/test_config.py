@@ -62,6 +62,33 @@ def test_get_config_allows_unset_audio_input_device():
     assert config.audio_input_device is None
 
 
+def test_get_config_reads_explicit_source_env_path(tmp_path, monkeypatch):
+    runtime_dir = tmp_path / "runtime"
+    local_env_path = tmp_path / ".env"
+    local_env_path.write_text(
+        "\n".join(
+            (
+                "mouse_movement_pixels=777",
+                "offline_model_path=models/dev-vosk",
+            )
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(config_module.AppConfig, "_default_runtime_dir", lambda: runtime_dir)
+
+    config = get_config(
+        source_env_path=local_env_path,
+        seed_user_env=False,
+    )
+
+    assert config.mouse_movement_pixels == 777
+    assert config.env_path == local_env_path.resolve()
+    assert Path(config.offline_model_path) == (
+        tmp_path / "models" / "dev-vosk"
+    ).resolve()
+    assert not (runtime_dir / ".env").exists()
+
+
 def test_get_config_parses_env_values(monkeypatch):
     monkeypatch.setattr(
         config_module.AppConfig,
@@ -73,7 +100,7 @@ def test_get_config_parses_env_values(monkeypatch):
             "mouse_movement_pixels": "75",
             "mouse_scroll_units": "425",
             "wake_word_listen_seconds": "2.5",
-            "wake_word_notification_sound": "false",
+            "wake_word_notification": "false",
             "audio_input_device": "USB 2.0",
             "speech_language": "pt-br",
         }),
