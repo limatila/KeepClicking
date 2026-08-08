@@ -31,7 +31,7 @@ class CustumizableAudioInputMixin:
 
     audio_device_resolver = AudioDeviceResolver()
 
-    def resolve_input_device(self, device_name: str | None) -> int | None:
+    def resolve_input_device(self, device_name: str | int | None) -> int | None:
         """Resolve a configured selector to a sounddevice input device index."""
         return self.audio_device_resolver.resolve_input_device(device_name)
 

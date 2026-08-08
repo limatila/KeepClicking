@@ -22,20 +22,20 @@ _ALSA_CARD_HEADER_PATTERN = re.compile(
 class AudioDeviceResolver:
     """Resolve input-capable sound devices with cross-platform fallbacks."""
 
-    def resolve_input_device(self, selector: str | None) -> int | None:
+    def resolve_input_device(self, selector: str | int | None) -> int | None:
         """Resolve a configured selector to a sounddevice input device index."""
 
-        if isinstance(selector, str):
-            selector = selector.strip()
-            if not selector:
-                return None
+        selector_text = None
+        requested_index = None
 
+        if selector is not None:
+            selector_text = str(selector).strip()
+        
+        if selector_text:
             try:
-                requested_index = int(selector)
+                requested_index = int(selector_text)
             except ValueError:
                 requested_index = None
-        else:
-            requested_index = None
 
         devices = self.list_input_devices()
         
@@ -45,16 +45,22 @@ class AudioDeviceResolver:
                 "Please check your system settings and ensure that a microphone is connected."
             )
         
-        for device in devices:
-            if requested_index is None:
-                return device["index"]
-            
-            if device["index"] == requested_index:
-                return requested_index
+        if not selector_text:
+            return int(devices[0]["index"])
 
-        selector_lower = selector.casefold()
-        selector_normalized = self._normalize_label(selector)
-        selector_tokens = tuple(self._iter_tokens(selector))
+        if requested_index is not None:
+            for device in devices:
+                if device["index"] == requested_index:
+                    return requested_index
+
+            raise AdapterError(
+                f"Audio input device index '{selector_text}' not found. "
+                f"Available devices: {self.format_input_devices(devices)}"
+            )
+
+        selector_lower = selector_text.casefold()
+        selector_normalized = self._normalize_label(selector_text)
+        selector_tokens = tuple(self._iter_tokens(selector_text))
 
         for matcher in (
             lambda candidate: selector_lower == candidate.casefold(),
@@ -68,7 +74,7 @@ class AudioDeviceResolver:
                 return matched_index
 
         raise AdapterError(
-            f"Audio input device '{selector}' not found. "
+            f"Audio input device '{selector_text}' not found. "
             f"Available devices: {self.format_input_devices(devices)}"
         )
 
