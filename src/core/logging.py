@@ -78,11 +78,7 @@ def configure_logging(config: AppConfig) -> None:
     log_level = DEBUG if config.debug_mode else INFO
     formatter = logging.Formatter(config.logging_format)
 
-    if config.debug_mode:
-        file_log_path = None
-    
-    else:
-        file_log_path = _ACTIVE_RUNTIME_LOG_PATH or _get_next_runtime_log_path(config.log_dir)
+    file_log_path = _ACTIVE_RUNTIME_LOG_PATH or _get_next_runtime_log_path(config.log_dir)
     
     for logger in ALL_LOGGERS:
         logger.setLevel(log_level)
