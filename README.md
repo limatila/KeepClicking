@@ -1,6 +1,6 @@
 # KeepClicking
 
-KeepClicking is currently released as a CLI-only offline voice mouse controller for Windows-focused development. Packaging and installer flows are not documented yet.
+KeepClicking is currently released as a CLI-only offline voice mouse controller for Windows-focused usage. Packaging and installer flows are not documented yet.
 
 ## Installation
 
@@ -35,9 +35,31 @@ uv run python -m src.cli
 Notes:
 
 - `.env` keys for configuration are read from the repository root (`KeepClicking/.env`) and are expected in lowercase, exactly as shown in `src/core/config.py`.
-- The default wake-word model already points to a bundled file: `src/resources/models/openwakeword/keeper_v1.onnx`.
-- The default offline speech model already points to a bundled Vosk directory: `src/resources/models/vosk/vosk-model-small-en-us-0.15`.
+- The default wake-word model already points to a bundled file: `src/resources/models/openwakeword/hey_keeper_v2.onnx`.
+- The default offline speech model is selected from `speech_language`: `en_us` uses `src/resources/models/vosk/vosk-model-small-en-us-0.15`, and `pt_br` uses `src/resources/models/vosk/vosk-model-small-pt-0.3`.
 - OpenWakeWord also needs its support models (`melspectrogram.onnx` and `embedding_model.onnx`). The runtime first looks for them in the installed `openwakeword` package and falls back to `.cache/openwakeword` if it needs to download them.
+
+## Packaging
+
+Windows builds are produced from `src/main.py` as separate EXEs, one per bundled offline speech model:
+
+- `dist/KeepClicking-en-us.exe`
+- `dist/KeepClicking-pt-br.exe`
+
+Build them with:
+
+```powershell
+.\scripts\build_exe.ps1
+```
+
+Or one variant at a time:
+
+```powershell
+.\scripts\build_exe.ps1 -Variant en-us
+.\scripts\build_exe.ps1 -Variant pt-br
+```
+
+Each EXE bundles only its matching Vosk model for size reduction. If a local `.env` override points `offline_model_path` at a model directory that is not present in that package, startup fails with a clear Vosk adapter error.
 
 ## How To Use
 
@@ -74,37 +96,38 @@ Commands that are currently implemented in the CLI:
 Examples:
 
 ```text
-keeper
+hey keeper
 click
 ```
 
 ```text
-keeper
+hey keeper
 double click
 ```
 
 ```text
-keeper
+hey keeper
 scroll down
 ```
 
 ```text
-keeper
+hey keeper
 move right
 ```
 
 ```text
-keeper
+hey keeper
 stop
 ```
 
 Notes:
 
 - The wake word and the command are handled as a sequence. The runtime listens for the wake word first, then records the command phrase.
-- The default command listening window is `5.0` seconds.
+- The default command listening window is `3.0` seconds.
 - `stop` ends the running CLI loop.
 - `scroll` currently supports `up` and `down`, and bare `scroll` is treated as incomplete input rather than a canonical command.
-- Speech normalization currently supports `en_us` by default and can be prepared for `pt_br`, while still feeding the parser with canonical English commands.
+- Speech normalization supports both `en_us` and `pt_br`, while still feeding the parser with canonical English commands.
+- `speech_language` also selects the default bundled Vosk model unless `offline_model_path` is explicitly overridden.
 
 ## Possible Errors
 
@@ -138,15 +161,15 @@ This section is based on `src/core/config.py` and cross-checked against the test
 | `.env` key | Default | Consequence in the current CLI |
 | --- | --- | --- |
 | `debug_mode` | `False` | Keeps the CLI in normal runtime mode unless explicitly enabled. |
-| `speech_language` | `en_us` | Selects which speech normalizer is used before parsing. Current supported values are `en_us` and `pt_br`. |
-| `openwakeword_model_path` | `src/resources/models/openwakeword/keeper_v1.onnx` | Selects which OpenWakeWord model file is used to detect the activation word. |
-| `offline_model_path` | `src/resources/models/vosk/vosk-model-small-en-us-0.15` | Selects the bundled Vosk model directory used for offline speech recognition. |
+| `speech_language` | `en_us` | Selects the speech normalizer and the default bundled Vosk model. Current supported values are `en_us` and `pt_br`. |
+| `openwakeword_model_path` | `src/resources/models/openwakeword/hey_keeper_v2.onnx` | Selects which OpenWakeWord model file is used to detect the activation word. |
+| `offline_model_path` | language-specific default | Selects the Vosk model directory used for offline speech recognition. If unset, it follows `speech_language`. |
 | `pyautogui_pause_seconds` | `0.1` | Adds a pause after PyAutoGUI actions. Higher values make actions safer/slower; lower values make them faster. |
 | `pyautogui_failsafe` | `True` | Keeps PyAutoGUI fail-safe protection enabled unless explicitly disabled. |
-| `mouse_movement_pixels` | `50` | Controls how far each `move <direction>` command moves the cursor. |
-| `mouse_scroll_units` | `300` | Controls how far each `scroll up/down` command scrolls. |
-| `wake_word_phrase` | `keeper` | Changes the expected activation phrase in logs/config. In practice, wake-word detection still depends on the model selected by `openwakeword_model_path`, so these two settings should stay aligned. |
-| `wake_word_listen_seconds` | `5.0` | Controls how long the CLI records audio after wake-word detection. Shorter values may cut commands off; longer values capture more silence before transcription completes. |
+| `mouse_movement_pixels` | `200` | Controls how far each `move <direction>` command moves the cursor. |
+| `mouse_scroll_units` | `350` | Controls how far each `scroll up/down` command scrolls. |
+| `wake_word_phrase` | `hey keeper` | Changes the expected activation phrase in logs/config. In practice, wake-word detection still depends on the model selected by `openwakeword_model_path`, so these two settings should stay aligned. |
+| `wake_word_listen_seconds` | `3.0` | Controls how long the CLI records audio after wake-word detection. Shorter values may cut commands off; longer values capture more silence before transcription completes. |
 | `audio_input_device` | `None` | Chooses the microphone. Leave unset to use the system default input device. You can also set a numeric index or a fuzzy device name such as `USB 2.0`. |
 
 ## Audio Device Selection
@@ -173,4 +196,4 @@ uv run python -m src.cli --list-audio-devices
 .\.venv\Scripts\python -m src.cli
 ```
 
-- The project is not packaged as `.exe` yet. The current goal of this branch is to keep the CLI runtime stable and keep the dependencies and bundled models ready for that next step.
+- Production packaging is supported through `.\scripts\build_exe.ps1`, which produces `KeepClicking-en-us.exe` and `KeepClicking-pt-br.exe`.
