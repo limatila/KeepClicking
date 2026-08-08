@@ -363,6 +363,7 @@ def test_wait_for_wake_word_continues_when_notification_sound_fails(
 
 
 def test_wait_for_wake_word_passes_device_to_input_stream(monkeypatch):
+    device_name = "Conference Microphone"
     monkeypatch.setattr(
         AudioDeviceResolver,
         "resolve_input_device",
@@ -371,7 +372,7 @@ def test_wait_for_wake_word_passes_device_to_input_stream(monkeypatch):
     config = get_config(
         wake_word_phrase="keeper",
         openwakeword_model_path="/tmp/custom_wakeword.onnx",
-        audio_input_device="USB 2.0",
+        audio_input_device=device_name,
     )
     engine = OpenWakeWordEngine(
         config,
@@ -408,6 +409,11 @@ def test_wait_for_wake_word_passes_device_to_input_stream(monkeypatch):
             return np.zeros((frames, 1), dtype=np.float32), False
 
     monkeypatch.setattr(engine, "load_model", lambda: FakeModel())
+    monkeypatch.setattr(
+        engine,
+        "_format_device_info_log",
+        lambda: {"index": 1, "name": device_name},
+    )
     monkeypatch.setattr(engine, "_raise_if_instant_audio_read", lambda read_seconds: None)
     monkeypatch.setattr(wakeword_engine.sounddevice, "InputStream", FakeInputStream)
 
@@ -419,13 +425,14 @@ def test_wait_for_wake_word_passes_device_to_input_stream(monkeypatch):
     assert FakeModel.last_audio_frame.ndim == 1
 
 
-def test_wait_for_wake_word_uses_default_device_when_config_is_unset(
+def test_wait_for_wake_word_uses_first_available_device_when_config_is_unset(
     monkeypatch,
 ):
+    first_input_index = 3
     monkeypatch.setattr(
         AudioDeviceResolver,
         "resolve_input_device",
-        lambda self, selector: None,
+        lambda self, selector: first_input_index,
     )
     config = get_config(
         wake_word_phrase="keeper",
@@ -459,11 +466,16 @@ def test_wait_for_wake_word_uses_default_device_when_config_is_unset(
             return np.zeros((frames, 1), dtype=np.float32), False
 
     monkeypatch.setattr(engine, "load_model", lambda: FakeModel())
+    monkeypatch.setattr(
+        engine,
+        "_format_device_info_log",
+        lambda: {"index": first_input_index, "name": "Laptop Array Microphone"},
+    )
     monkeypatch.setattr(engine, "_raise_if_instant_audio_read", lambda read_seconds: None)
     monkeypatch.setattr(wakeword_engine.sounddevice, "InputStream", FakeInputStream)
 
     assert engine.wait_for_wake_word() is True
-    assert FakeInputStream.kwargs_seen["device"] is None
+    assert FakeInputStream.kwargs_seen["device"] == first_input_index
 
 
 def test_wait_for_wake_word_logs_raw_dict_scores(monkeypatch, caplog):

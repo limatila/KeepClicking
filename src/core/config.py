@@ -95,9 +95,9 @@ class AppConfig:
         log_dir = runtime_dir / "logs"
         cache_dir = runtime_dir / ".cache" / "models" / "openwakeword"
 
-        runtime_dir.mkdir(parents=False, exist_ok=True)
-        log_dir.mkdir(parents=False, exist_ok=True)
-        cache_dir.mkdir(parents=False, exist_ok=True)
+        runtime_dir.mkdir(parents=True, exist_ok=True)
+        log_dir.mkdir(parents=True, exist_ok=True)
+        cache_dir.mkdir(parents=True, exist_ok=True)
 
         self.runtime_dir = runtime_dir
         self.env_path = env_path

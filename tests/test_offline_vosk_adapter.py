@@ -18,6 +18,11 @@ class DummyWakeWordEngine:
 
 
 def test_set_speech_models_uses_command_grammar(monkeypatch):
+    monkeypatch.setattr(
+        AudioDeviceResolver,
+        "resolve_input_device",
+        lambda self, selector: 1,
+    )
     config = get_config(audio_input_device=None, offline_model_path="/tmp/model")
     adapter = VoskSpeechAdapter(config, DummyWakeWordEngine())
     recognizer_args = {}
@@ -57,13 +62,14 @@ def test_set_speech_models_uses_command_grammar(monkeypatch):
 
 
 def test_record_audio_passes_device_to_sounddevice_rec(monkeypatch):
+    device_name = "Conference Microphone"
     monkeypatch.setattr(
         AudioDeviceResolver,
         "resolve_input_device",
         lambda self, selector: 1,
     )
 
-    config = get_config(audio_input_device="USB 2.0", offline_model_path="/tmp/model")
+    config = get_config(audio_input_device=device_name, offline_model_path="/tmp/model")
     adapter = VoskSpeechAdapter(config, DummyWakeWordEngine())
 
     rec_kwargs = {}
@@ -81,7 +87,13 @@ def test_record_audio_passes_device_to_sounddevice_rec(monkeypatch):
     assert rec_kwargs["device"] == 1
 
 
-def test_record_audio_uses_default_device_when_config_is_unset(monkeypatch):
+def test_record_audio_uses_first_available_device_when_config_is_unset(monkeypatch):
+    first_input_index = 3
+    monkeypatch.setattr(
+        AudioDeviceResolver,
+        "resolve_input_device",
+        lambda self, selector: first_input_index,
+    )
     config = get_config(audio_input_device=None, offline_model_path="/tmp/model")
     adapter = VoskSpeechAdapter(config, DummyWakeWordEngine())
 
@@ -96,4 +108,4 @@ def test_record_audio_uses_default_device_when_config_is_unset(monkeypatch):
 
     adapter._record_audio()
 
-    assert rec_kwargs["device"] is None
+    assert rec_kwargs["device"] == first_input_index

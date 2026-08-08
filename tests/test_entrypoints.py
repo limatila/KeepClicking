@@ -51,6 +51,38 @@ def test_cli_main_runs_application_when_no_one_off_command(monkeypatch):
     assert seen["debug_mode"] is True
 
 
+def test_cli_main_loads_project_env_file(monkeypatch, tmp_path):
+    command = FakeCommandResult(should_dispatch=False)
+    seen = {}
+    local_env_path = tmp_path / ".env"
+    local_env_path.write_text("mouse_movement_pixels=321\n", encoding="utf-8")
+
+    monkeypatch.setattr(cli_module, "ROOT_PATH", tmp_path)
+    monkeypatch.setattr(cli_module, "resolve_cli_command", lambda argv, config: command)
+    monkeypatch.setattr(cli_module, "configure_logging", lambda config: None)
+    monkeypatch.setattr(
+        cli_module,
+        "run_application",
+        lambda config: seen.update(
+            {
+                "debug_mode": config.debug_mode,
+                "env_path": config.env_path,
+                "mouse_movement_pixels": config.mouse_movement_pixels,
+            }
+        )
+        or 0,
+    )
+
+    result = cli_module.main([])
+
+    assert result == 0
+    assert seen == {
+        "debug_mode": True,
+        "env_path": local_env_path.resolve(),
+        "mouse_movement_pixels": 321,
+    }
+
+
 def test_main_dispatches_one_off_command_without_running_app(monkeypatch):
     command = FakeCommandResult(should_dispatch=True, exit_code=5)
     run_calls = {"count": 0}
