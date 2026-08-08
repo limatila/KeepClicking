@@ -6,6 +6,7 @@ from src.core.config import (
     DEFAULT_OFFLINE_MODEL_PATH,
     DEFAULT_OPENWAKEWORD_MODEL_PATH,
     AppConfig,
+    get_default_offline_model_path,
     get_config,
 )
 
@@ -50,10 +51,53 @@ def test_get_config_defaults(monkeypatch):
     assert config.speech_language == SpeechLanguage.EN_US
 
 
+def test_get_config_defaults_pt_br_offline_model_from_language(monkeypatch):
+    monkeypatch.setattr(
+        config_module.AppConfig,
+        "read_env_values",
+        staticmethod(lambda: {"speech_language": "pt-br"}),
+    )
+
+    config = get_config()
+
+    assert config.speech_language == SpeechLanguage.PT_BR
+    assert Path(config.offline_model_path) == get_default_offline_model_path(
+        SpeechLanguage.PT_BR
+    )
+
+
 def test_get_config_overrides():
     base = get_config()
     updated = get_config(base, mouse_movement_pixels=123)
     assert updated.mouse_movement_pixels == 123
+
+
+def test_get_config_updates_default_offline_model_when_language_override_changes(monkeypatch):
+    monkeypatch.setattr(
+        config_module.AppConfig,
+        "read_env_values",
+        staticmethod(lambda: {}),
+    )
+
+    base = get_config()
+    updated = get_config(base, speech_language=SpeechLanguage.PT_BR)
+
+    assert updated.speech_language == SpeechLanguage.PT_BR
+    assert Path(updated.offline_model_path) == get_default_offline_model_path(
+        SpeechLanguage.PT_BR
+    )
+
+
+def test_get_config_keeps_explicit_offline_model_override_over_language_default():
+    custom_model_path = "/tmp/custom-vosk-model"
+
+    config = get_config(
+        speech_language=SpeechLanguage.PT_BR,
+        offline_model_path=custom_model_path,
+    )
+
+    assert config.speech_language == SpeechLanguage.PT_BR
+    assert config.offline_model_path == custom_model_path
 
 
 def test_get_config_allows_unset_audio_input_device():
@@ -111,7 +155,9 @@ def test_get_config_parses_env_values(monkeypatch):
     assert config == AppConfig(
         debug_mode=True,
         openwakeword_model_path=str(DEFAULT_OPENWAKEWORD_MODEL_PATH),
-        offline_model_path=str(DEFAULT_OFFLINE_MODEL_PATH),
+        offline_model_path=str(
+            get_default_offline_model_path(SpeechLanguage.PT_BR)
+        ),
         pyautogui_pause_seconds=0.25,
         pyautogui_failsafe=False,
         mouse_movement_pixels=75,

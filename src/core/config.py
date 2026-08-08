@@ -30,12 +30,20 @@ OPENWAKEWORD_LIB_MODEL_DIR = (
 DEFAULT_OPENWAKEWORD_MODEL_PATH = (
     OPENWAKEWORD_PACKAGED_MODEL_DIR / "hey_keeper_v2.onnx"
 )
-DEFAULT_OFFLINE_MODEL_PATH = (
-    MODELS_PATH / "vosk" / "vosk-model-small-en-us-0.15"
-)
+DEFAULT_OFFLINE_MODEL_PATHS = {
+    SpeechLanguage.EN_US: MODELS_PATH / "vosk" / "vosk-model-small-en-us-0.15",
+    SpeechLanguage.PT_BR: MODELS_PATH / "vosk" / "vosk-model-small-pt-0.3",
+}
+DEFAULT_OFFLINE_MODEL_PATH = DEFAULT_OFFLINE_MODEL_PATHS[SpeechLanguage.EN_US]
 DEFAULT_NOTIFICATION_SOUND_PATH = ASSETS_PATH / "notify.mp3"
 DEFAULT_LOG_FORMAT = "[%(levelname)s] | %(name)s -|- %(message)s"
 PATH_ENV_FIELDS = frozenset({"openwakeword_model_path", "offline_model_path"})
+
+
+def get_default_offline_model_path(language: SpeechLanguage) -> Path:
+    """Return the bundled Vosk model directory for the configured language."""
+
+    return DEFAULT_OFFLINE_MODEL_PATHS[language]
 
 
 @dataclass(slots=True)
@@ -47,7 +55,7 @@ class AppConfig:
     audio_input_device: str | None = None
     speech_language: SpeechLanguage = SpeechLanguage.EN_US
     openwakeword_model_path: str = str(DEFAULT_OPENWAKEWORD_MODEL_PATH)
-    offline_model_path: str = str(DEFAULT_OFFLINE_MODEL_PATH)
+    offline_model_path: str | None = None
     wake_word_phrase: str = "hey keeper"
     wake_word_notification: bool = True
     wake_word_listen_seconds: float = 3.0
@@ -90,6 +98,11 @@ class AppConfig:
     openwakeword_cache_dir: Path = None
 
     def __post_init__(self) -> None:
+        if not self.offline_model_path:
+            self.offline_model_path = str(
+                get_default_offline_model_path(self.speech_language)
+            )
+
         runtime_dir = Path(self.runtime_dir).resolve()
         env_path = Path(self.env_path).resolve() if self.env_path else runtime_dir / ".env"
         log_dir = runtime_dir / "logs"
@@ -308,6 +321,16 @@ def get_config(
     )
     
     if overrides:
+        if "speech_language" in overrides and "offline_model_path" not in overrides:
+            next_language = overrides["speech_language"]
+            if (
+                isinstance(next_language, SpeechLanguage) and
+                config.offline_model_path == str(get_default_offline_model_path(config.speech_language))
+            ):
+                overrides["offline_model_path"] = str(
+                    get_default_offline_model_path(next_language)
+                )
+
         return replace(config, **overrides)
 
     return config

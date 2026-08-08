@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import numpy as np
 import sounddevice
@@ -53,6 +54,15 @@ class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface):
     def _set_speech_models(self) -> None:
         if self.speech_recognizer is not None:
             return
+
+        model_path = Path(self.config.offline_model_path)
+       
+        if not model_path.exists() or not model_path.is_dir():
+            raise AdapterError(
+                f"Vosk model path '{self.config.offline_model_path}' for speech_language '{self.config.speech_language.value}' was not found. "
+                "This packaged EXE only contains its matching bundled language model. If you changed offline_model_path in a local .env file, "
+                "point it to an existing en_us Vosk model directory as in project structure."
+            )
 
         self.speech_model = Model(self.config.offline_model_path)
         self.speech_recognizer = KaldiRecognizer(
