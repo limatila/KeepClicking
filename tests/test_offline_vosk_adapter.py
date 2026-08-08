@@ -3,9 +3,7 @@ import numpy as np
 import pytest
 
 from src.command_mapper.normalizers.mappings import (
-    CANONICAL_COMMANDS,
-    ENGLISH_COMMAND_ALIASES,
-    PORTUGUESE_COMMAND_ALIASES,
+    resolve_recognition_phrases,
 )
 from src.core.choices import SpeechLanguage
 from src.core.errors import AdapterError
@@ -46,16 +44,7 @@ def test_set_speech_models_uses_command_grammar(monkeypatch, tmp_path):
 
     adapter._set_speech_models()
     parsed_grammar = json.loads(recognizer_args["grammar"])
-    expected_grammar = list(
-        dict.fromkeys(
-            (
-                *CANONICAL_COMMANDS,
-                *ENGLISH_COMMAND_ALIASES.keys(),
-                *PORTUGUESE_COMMAND_ALIASES.keys(),
-                "[unk]",
-            )
-        )
-    )
+    expected_grammar = [*resolve_recognition_phrases(SpeechLanguage.EN_US), "[unk]"]
 
     assert recognizer_args["model_path"] == str(model_dir)
     assert recognizer_args["sample_rate"] == 16000
@@ -63,10 +52,11 @@ def test_set_speech_models_uses_command_grammar(monkeypatch, tmp_path):
     assert "double click" in parsed_grammar
     assert "two click" in parsed_grammar
     assert "mouse up" in parsed_grammar
+    assert "the were click" in parsed_grammar
     assert "[unk]" in parsed_grammar
 
 
-def test_set_speech_models_uses_pt_br_default_model_from_language(monkeypatch):
+def test_set_speech_models_uses_pt_br_default_model_and_portuguese_grammar(monkeypatch):
     monkeypatch.setattr(
         AudioDeviceResolver,
         "resolve_input_device",
@@ -92,9 +82,16 @@ def test_set_speech_models_uses_pt_br_default_model_from_language(monkeypatch):
     monkeypatch.setattr(vosk_adapter, "KaldiRecognizer", FakeRecognizer)
 
     adapter._set_speech_models()
+    parsed_grammar = json.loads(recognizer_args["grammar"])
 
     assert recognizer_args["model_path"].endswith("vosk-model-small-pt-0.3")
     assert recognizer_args["sample_rate"] == 16000
+    assert "clique duplo" in parsed_grammar
+    assert "clique direito" in parsed_grammar
+    assert "mova para esquerda" in parsed_grammar
+    assert "pare" in parsed_grammar
+    assert "clique" in parsed_grammar
+    assert "mouse up" not in parsed_grammar
 
 
 def test_set_speech_models_raises_actionable_error_when_model_dir_is_missing(monkeypatch, tmp_path):

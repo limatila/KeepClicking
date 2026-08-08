@@ -10,9 +10,7 @@ import sounddevice
 from vosk import KaldiRecognizer, Model
 
 from src.command_mapper.normalizers.mappings import (
-    CANONICAL_COMMANDS,
-    ENGLISH_COMMAND_ALIASES,
-    PORTUGUESE_COMMAND_ALIASES,
+    resolve_recognition_phrases,
 )
 from src.core.config import AppConfig
 from src.core.errors import AdapterError
@@ -39,16 +37,10 @@ class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface):
             raise AdapterError("offline_model_path must be configured for Vosk")
 
     def _build_command_grammar(self) -> str:
-        command_phrases = list(
-            dict.fromkeys(
-                (
-                    *CANONICAL_COMMANDS,
-                    *ENGLISH_COMMAND_ALIASES.keys(),
-                    *PORTUGUESE_COMMAND_ALIASES.keys(),
-                    "[unk]",
-                )
-            )
-        )
+        command_phrases = [
+            *resolve_recognition_phrases(self.config.speech_language),
+            "[unk]",
+        ]
         return json.dumps(command_phrases)
 
     def _set_speech_models(self) -> None:

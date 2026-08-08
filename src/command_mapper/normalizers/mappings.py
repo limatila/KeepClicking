@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from src.command_mapper.command_shapes import iter_command_shapes
+from src.core.choices import SpeechLanguage
 
 
 def resolve_canonical_mapping() -> tuple[str, ...]:
@@ -112,3 +113,30 @@ PORTUGUESE_COMMAND_ALIASES: Mapping[str, str] = {
     "move right": "move right",
     "stop": "stop",
 }
+
+
+def resolve_recognition_phrases(language: SpeechLanguage) -> tuple[str, ...]:
+    """Return the speech phrases the recognizer should accept for one language."""
+
+    if language == SpeechLanguage.PT_BR:
+        return tuple(
+            dict.fromkeys(
+                (
+                    *CANONICAL_COMMANDS,
+                    *PORTUGUESE_COMMAND_ALIASES.keys(),
+                    *PORTUGUESE_PHRASE_CORRECTIONS.keys(),
+                    *PORTUGUESE_TOKEN_CORRECTIONS.keys(),
+                )
+            )
+        )
+
+    return tuple(
+        dict.fromkeys(
+            (
+                *CANONICAL_COMMANDS,
+                *ENGLISH_COMMAND_ALIASES.keys(),
+                *ENGLISH_PHRASE_CORRECTIONS.keys(),
+                *ENGLISH_TOKEN_CORRECTIONS.keys(),
+            )
+        )
+    )
