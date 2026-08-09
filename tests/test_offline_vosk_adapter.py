@@ -1,4 +1,5 @@
 import json
+import logging
 import numpy as np
 import pytest
 
@@ -16,6 +17,14 @@ from src.speech.offline_adapters.offline_vosk_adapter import VoskSpeechAdapter
 class DummyWakeWordEngine:
     def wait_for_wake_word(self):
         return True
+
+
+class FakeNotificationSoundPlayer:
+    def __init__(self):
+        self.calls = []
+
+    def play_speech_error(self):
+        self.calls.append("speech_error")
 
 
 def test_set_speech_models_uses_command_grammar(monkeypatch, tmp_path):
@@ -41,6 +50,11 @@ def test_set_speech_models_uses_command_grammar(monkeypatch, tmp_path):
 
     monkeypatch.setattr(vosk_adapter, "Model", FakeModel)
     monkeypatch.setattr(vosk_adapter, "KaldiRecognizer", FakeRecognizer)
+    monkeypatch.setattr(
+        vosk_adapter,
+        "set_vosk_log_level",
+        lambda level: recognizer_args.__setitem__("log_level", level),
+    )
 
     adapter._set_speech_models()
     parsed_grammar = json.loads(recognizer_args["grammar"])
@@ -48,6 +62,7 @@ def test_set_speech_models_uses_command_grammar(monkeypatch, tmp_path):
 
     assert recognizer_args["model_path"] == str(model_dir)
     assert recognizer_args["sample_rate"] == 16000
+    assert recognizer_args["log_level"] == -1
     assert parsed_grammar == expected_grammar
     assert "double click" in parsed_grammar
     assert "two click" in parsed_grammar
@@ -80,6 +95,7 @@ def test_set_speech_models_uses_pt_br_default_model_and_portuguese_grammar(monke
 
     monkeypatch.setattr(vosk_adapter, "Model", FakeModel)
     monkeypatch.setattr(vosk_adapter, "KaldiRecognizer", FakeRecognizer)
+    monkeypatch.setattr(vosk_adapter, "set_vosk_log_level", lambda level: None)
 
     adapter._set_speech_models()
     parsed_grammar = json.loads(recognizer_args["grammar"])
@@ -164,3 +180,72 @@ def test_record_audio_uses_first_available_device_when_config_is_unset(monkeypat
     adapter._record_audio()
 
     assert rec_kwargs["device"] == first_input_index
+
+
+def test_next_text_plays_speech_error_when_vosk_returns_empty_text(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        AudioDeviceResolver,
+        "resolve_input_device",
+        lambda self, selector: 1,
+    )
+    model_dir = tmp_path / "model"
+    model_dir.mkdir()
+    notification_sound_player = FakeNotificationSoundPlayer()
+    config = get_config(audio_input_device=None, offline_model_path=str(model_dir))
+    monkeypatch.setattr(
+        vosk_adapter,
+        "build_notification_sound_player",
+        lambda: notification_sound_player,
+    )
+    adapter = VoskSpeechAdapter(config, DummyWakeWordEngine())
+
+    class FakeRecognizer:
+        def AcceptWaveform(self, audio_bytes):
+            return True
+
+        def Result(self):
+            return json.dumps({"text": ""})
+
+    monkeypatch.setattr(adapter, "_record_audio", lambda: b"audio")
+    monkeypatch.setattr(adapter, "_set_speech_models", lambda: None)
+    adapter.speech_recognizer = FakeRecognizer()
+
+    assert adapter.next_text() == ""
+    assert notification_sound_player.calls == ["speech_error"]
+
+
+def test_set_speech_models_logs_model_path_and_grammar(monkeypatch, tmp_path, caplog):
+    monkeypatch.setattr(
+        AudioDeviceResolver,
+        "resolve_input_device",
+        lambda self, selector: 1,
+    )
+    model_dir = tmp_path / "model"
+    model_dir.mkdir()
+    config = get_config(audio_input_device=None, offline_model_path=str(model_dir))
+    adapter = VoskSpeechAdapter(config, DummyWakeWordEngine())
+
+    class FakeModel:
+        def __init__(self, model_path):
+            self.model_path = model_path
+
+    class FakeRecognizer:
+        def __init__(self, model, sample_rate, grammar):
+            self.sample_rate = sample_rate
+            self.grammar = grammar
+
+    monkeypatch.setattr(vosk_adapter, "Model", FakeModel)
+    monkeypatch.setattr(vosk_adapter, "KaldiRecognizer", FakeRecognizer)
+    monkeypatch.setattr(vosk_adapter, "set_vosk_log_level", lambda level: None)
+
+    with caplog.at_level(logging.INFO, logger="baseLogger.adapter"):
+        adapter._set_speech_models()
+
+    assert any(
+        f"Loading Vosk model from '{model_dir}'." == record.message
+        for record in caplog.records
+    )
+    assert any(
+        "Loaded Vosk grammar:" in record.message
+        for record in caplog.records
+    )

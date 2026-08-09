@@ -48,13 +48,14 @@ def test_configure_logging_uses_runtime_override_over_env(monkeypatch):
         logging_module.CORE_LOGGER,
         logging_module.DEFAULT_HANDLER_NAME,
     )
+    file_handler = _find_handler(
+        logging_module.CORE_LOGGER,
+        logging_module.DEFAULT_FILE_HANDLER_NAME,
+    )
 
     assert logging_module.CORE_LOGGER.level == logging_module.DEBUG
     assert stream_handler.level == logging_module.DEBUG
-    assert all(
-        getattr(handler, "name", "") != logging_module.DEFAULT_FILE_HANDLER_NAME
-        for handler in logging_module.CORE_LOGGER.handlers
-    )
+    assert file_handler.level == logging_module.DEBUG
 
 
 def test_configure_logging_respects_non_debug_runtime_config(monkeypatch, tmp_path):
@@ -106,15 +107,17 @@ def test_configure_logging_creates_incremented_run_logs(tmp_path):
     assert logging_module._ACTIVE_RUNTIME_LOG_PATH == log_dir / "runtime_3.log"
 
 
-def test_configure_logging_in_debug_mode_starts_without_a_file_handler(tmp_path):
+def test_configure_logging_in_debug_mode_creates_a_file_handler(tmp_path):
     logging_module.configure_logging(AppConfig(debug_mode=True, runtime_dir=tmp_path))
 
-    assert all(
-        getattr(handler, "name", "") != logging_module.DEFAULT_FILE_HANDLER_NAME
-        for handler in logging_module.CORE_LOGGER.handlers
+    file_handler = _find_handler(
+        logging_module.CORE_LOGGER,
+        logging_module.DEFAULT_FILE_HANDLER_NAME,
     )
-    assert logging_module._ACTIVE_FILE_HANDLER is None
-    assert logging_module._ACTIVE_RUNTIME_LOG_PATH is None
+
+    assert file_handler.level == logging_module.DEBUG
+    assert logging_module._ACTIVE_FILE_HANDLER is file_handler
+    assert logging_module._ACTIVE_RUNTIME_LOG_PATH == tmp_path / "logs" / "runtime_1.log"
 
 
 def test_get_config_parses_false_boolean_from_env(monkeypatch):

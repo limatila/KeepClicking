@@ -35,7 +35,6 @@ DEFAULT_OFFLINE_MODEL_PATHS = {
     SpeechLanguage.PT_BR: MODELS_PATH / "vosk" / "vosk-model-small-pt-0.3",
 }
 DEFAULT_OFFLINE_MODEL_PATH = DEFAULT_OFFLINE_MODEL_PATHS[SpeechLanguage.EN_US]
-DEFAULT_NOTIFICATION_SOUND_PATH = ASSETS_PATH / "notify.mp3"
 DEFAULT_LOG_FORMAT = "[%(levelname)s] | %(name)s -|- %(message)s"
 PATH_ENV_FIELDS = frozenset({"openwakeword_model_path", "offline_model_path"})
 

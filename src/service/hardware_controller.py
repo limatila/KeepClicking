@@ -9,9 +9,9 @@ from src.core.dataclasses import MouseCommand
 from src.core.choices import MouseCommandAction, CommandDirection
 from src.core.errors import MouseExecutionError
 from src.core.logging import CONTROLLER_LOGGER
-
 from src.service.dataclasses import MouseExecutionResult
 from src.service.interfaces import Controller
+from src.utils.notifications import NotificationSoundPlayer, build_notification_sound_player
 
 
 class PyAutoGuiMouseController(Controller):
@@ -19,6 +19,7 @@ class PyAutoGuiMouseController(Controller):
     def __init__(self):
         self.stopped = False
         self.error = None
+        self.notification_sound_player: NotificationSoundPlayer = build_notification_sound_player()
 
     def click(self, times: int = 1, right_click: bool = False):
         button_side = "right" if right_click else "primary"
@@ -78,6 +79,13 @@ class PyAutoGuiMouseController(Controller):
                 if not has_executed:
                     self.error = MouseExecutionError("Unsupported or invalid command")
                 else:
+                    if command.action in {
+                        MouseCommandAction.CLICK,
+                        MouseCommandAction.DOUBLE_CLICK,
+                        MouseCommandAction.RIGHT_CLICK,
+                    }:
+                        self.notification_sound_player.play_click()
+
                     CONTROLLER_LOGGER.debug("mouse_execute: %s", command.action)
             
             return MouseExecutionResult(stopped=self.stopped, error=self.error)

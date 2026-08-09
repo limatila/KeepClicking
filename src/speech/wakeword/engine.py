@@ -19,24 +19,25 @@ from src.core.config import (
 )
 from src.core.errors import AdapterError
 from src.core.logging import ADAPTER_LOGGER
+
 from src.speech.interfaces import (
     CustumizableAudioInputMixin,
     WakeWordEngineInterface,
 )
-from src.speech.notifications import build_notification_sound_player
+from src.utils.notifications import NotificationSoundPlayer, build_notification_sound_player
 
 
 class OpenWakeWordEngine(CustumizableAudioInputMixin, WakeWordEngineInterface):
     """OpenWakeWord-based wake-word detector."""
 
-    def __init__(self, config: AppConfig, threshold: float = 0.35, sample_rate: int = 16000, chunk_seconds: float = 0.5):
+    def __init__(self, config: AppConfig, threshold: float = 0.2, sample_rate: int = 16000, chunk_seconds: float = 1):
         self.config = config
         self.wake_word_phrase = config.wake_word_phrase
         self.model_path = str(config.openwakeword_model_path)
         self.threshold = threshold
         self.sample_rate = sample_rate
         self.chunk_seconds = chunk_seconds
-        self.notification_sound_player = build_notification_sound_player()
+        self.notification_sound_player: NotificationSoundPlayer = build_notification_sound_player()
         self.model: Model = None
         self.seconds_waiting = 0.0
         self.device_index = self.resolve_input_device(config.audio_input_device)

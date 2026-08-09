@@ -10,6 +10,7 @@ import src.service.application_runner as application_runner_module
 import src.service.hardware_controller as hardware_controller_module
 import src.speech.offline_adapters.offline_vosk_adapter as offline_vosk_adapter_module
 import src.speech.wakeword.engine as wakeword_engine_module
+import src.utils.notifications as notifications_module
 from src.core.choices import SpeechLanguage
 from src.core.config import get_default_offline_model_path
 
@@ -142,24 +143,42 @@ def test_build_application_runner_uses_pt_br_normalizer_and_default_vosk_model(m
     parser = object()
     validator = object()
     controller = object()
+    notification_sound_player = object()
 
     class FakeWakeWordEngine:
-        def __init__(self, config):
-            seen["wakeword_config"] = config
+        def __init__(self, *args, **kwargs):
+            seen["wakeword_args"] = args
+            seen["wakeword_kwargs"] = kwargs
+            seen["wakeword_config"] = args[0] if args else kwargs.get("config")
+            seen["wakeword_notification_sound_player"] = kwargs.get(
+                "notification_sound_player"
+            )
 
     class FakeAdapter:
-        def __init__(self, config, wake_word_engine):
-            seen["adapter_config"] = config
-            seen["wake_word_engine"] = wake_word_engine
+        def __init__(self, *args, **kwargs):
+            seen["adapter_args"] = args
+            seen["adapter_kwargs"] = kwargs
+            seen["adapter_config"] = args[0] if args else kwargs.get("config")
+            seen["wake_word_engine"] = (
+                args[1] if len(args) > 1 else kwargs.get("wake_word_engine")
+            )
+            seen["adapter_notification_sound_player"] = kwargs.get(
+                "notification_sound_player"
+            )
 
     class FakeRunner:
-        def __init__(self, adapter, normalizer, parser, validator, controller, config):
-            seen["adapter"] = adapter
-            seen["normalizer"] = normalizer
-            seen["parser"] = parser
-            seen["validator"] = validator
-            seen["controller"] = controller
-            seen["config"] = config
+        def __init__(self, *args, **kwargs):
+            seen["runner_args"] = args
+            seen["runner_kwargs"] = kwargs
+            seen["adapter"] = kwargs.get("adapter")
+            seen["normalizer"] = kwargs.get("normalizer")
+            seen["parser"] = kwargs.get("parser")
+            seen["validator"] = kwargs.get("validator")
+            seen["controller"] = kwargs.get("controller")
+            seen["config"] = kwargs.get("config")
+            seen["runner_notification_sound_player"] = kwargs.get(
+                "notification_sound_player"
+            )
 
     monkeypatch.setattr(
         normalizer_dispatchers_module,
@@ -171,7 +190,10 @@ def test_build_application_runner_uses_pt_br_normalizer_and_default_vosk_model(m
     monkeypatch.setattr(
         hardware_controller_module,
         "PyAutoGuiMouseController",
-        lambda: controller,
+        lambda *args, **kwargs: seen.__setitem__(
+            "controller_notification_sound_player",
+            kwargs.get("notification_sound_player"),
+        ) or controller,
     )
     monkeypatch.setattr(
         wakeword_engine_module,
@@ -187,6 +209,11 @@ def test_build_application_runner_uses_pt_br_normalizer_and_default_vosk_model(m
         application_runner_module,
         "MouseApplicationRunner",
         FakeRunner,
+    )
+    monkeypatch.setattr(
+        notifications_module,
+        "build_notification_sound_player",
+        lambda: notification_sound_player,
     )
 
     config = config_module.get_config(

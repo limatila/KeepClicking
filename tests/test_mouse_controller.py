@@ -5,13 +5,27 @@ from src.core.choices import CommandDirection, MouseCommandAction
 import src.service.hardware_controller as mouse_controller_service
 
 
+class FakeNotificationSoundPlayer:
+    def __init__(self):
+        self.calls = []
+
+    def play_click(self):
+        self.calls.append("click")
+
+
 def test_mouse_controller_click(monkeypatch):
     calls = []
+    notification_sound_player = FakeNotificationSoundPlayer()
 
     def fake_click(*args, **kwargs):
         calls.append(kwargs)
 
     monkeypatch.setattr(mouse_controller_service.pag, "click", fake_click)
+    monkeypatch.setattr(
+        mouse_controller_service,
+        "build_notification_sound_player",
+        lambda: notification_sound_player,
+    )
 
     controller = mouse_controller_service.PyAutoGuiMouseController()
     config = get_config()
@@ -21,17 +35,24 @@ def test_mouse_controller_click(monkeypatch):
     assert calls == [{"clicks": 1, "interval": 0.05, "button": "primary"}]
     assert result.stopped is False
     assert result.error is None
+    assert notification_sound_player.calls == ["click"]
     assert mouse_controller_service.pag.PAUSE == config.pyautogui_pause_seconds
     assert mouse_controller_service.pag.FAILSAFE == config.pyautogui_failsafe
 
 
 def test_mouse_controller_double_click(monkeypatch):
     calls = []
+    notification_sound_player = FakeNotificationSoundPlayer()
 
     def fake_click(*args, **kwargs):
         calls.append(kwargs)
 
     monkeypatch.setattr(mouse_controller_service.pag, "click", fake_click)
+    monkeypatch.setattr(
+        mouse_controller_service,
+        "build_notification_sound_player",
+        lambda: notification_sound_player,
+    )
 
     controller = mouse_controller_service.PyAutoGuiMouseController()
     config = get_config()
@@ -44,15 +65,22 @@ def test_mouse_controller_double_click(monkeypatch):
     assert calls == [{"clicks": 2, "interval": 0.05, "button": "primary"}]
     assert result.stopped is False
     assert result.error is None
+    assert notification_sound_player.calls == ["click"]
 
 
 def test_mouse_controller_right_click(monkeypatch):
     calls = []
+    notification_sound_player = FakeNotificationSoundPlayer()
 
     def fake_click(*args, **kwargs):
         calls.append(kwargs)
 
     monkeypatch.setattr(mouse_controller_service.pag, "click", fake_click)
+    monkeypatch.setattr(
+        mouse_controller_service,
+        "build_notification_sound_player",
+        lambda: notification_sound_player,
+    )
 
     controller = mouse_controller_service.PyAutoGuiMouseController()
     config = get_config()
@@ -65,15 +93,22 @@ def test_mouse_controller_right_click(monkeypatch):
     assert calls == [{"clicks": 1, "interval": 0.05, "button": "right"}]
     assert result.stopped is False
     assert result.error is None
+    assert notification_sound_player.calls == ["click"]
 
 
 def test_mouse_controller_scroll_down(monkeypatch):
     scroll_calls = []
+    notification_sound_player = FakeNotificationSoundPlayer()
 
     def fake_scroll(amount):
         scroll_calls.append(amount)
 
     monkeypatch.setattr(mouse_controller_service.pag, "scroll", fake_scroll)
+    monkeypatch.setattr(
+        mouse_controller_service,
+        "build_notification_sound_player",
+        lambda: notification_sound_player,
+    )
 
     controller = mouse_controller_service.PyAutoGuiMouseController()
     config = get_config()
@@ -90,6 +125,7 @@ def test_mouse_controller_scroll_down(monkeypatch):
     assert scroll_calls == [-300]
     assert result.stopped is False
     assert result.error is None
+    assert notification_sound_player.calls == []
 
 
 def test_mouse_controller_stop():
@@ -104,11 +140,17 @@ def test_mouse_controller_stop():
 
 def test_mouse_controller_does_not_keep_stop_state(monkeypatch):
     calls = []
+    notification_sound_player = FakeNotificationSoundPlayer()
 
     def fake_click(*args, **kwargs):
         calls.append(kwargs)
 
     monkeypatch.setattr(mouse_controller_service.pag, "click", fake_click)
+    monkeypatch.setattr(
+        mouse_controller_service,
+        "build_notification_sound_player",
+        lambda: notification_sound_player,
+    )
 
     controller = mouse_controller_service.PyAutoGuiMouseController()
     config = get_config()
@@ -120,3 +162,4 @@ def test_mouse_controller_does_not_keep_stop_state(monkeypatch):
     assert clicked.stopped is False
     assert clicked.error is None
     assert calls == [{"clicks": 1, "interval": 0.05, "button": "primary"}]
+    assert notification_sound_player.calls == ["click"]

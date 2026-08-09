@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import sounddevice
-from vosk import KaldiRecognizer, Model
+from vosk import KaldiRecognizer, Model, SetLogLevel as set_vosk_log_level
 
 from src.command_mapper.normalizers.mappings import (
     resolve_recognition_phrases,
@@ -15,11 +15,13 @@ from src.command_mapper.normalizers.mappings import (
 from src.core.config import AppConfig
 from src.core.errors import AdapterError
 from src.core.logging import ADAPTER_LOGGER
+
 from src.speech.interfaces import (
     CustumizableAudioInputMixin,
     SpeechAdapterInterface,
     WakeWordEngineInterface,
 )
+from src.utils.notifications import NotificationSoundPlayer, build_notification_sound_player
 
 
 class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface):
@@ -32,11 +34,13 @@ class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface):
         self.speech_model = None
         self.speech_recognizer = None
         self.device = self.resolve_input_device(config.audio_input_device)
+        self.notification_sound_player = build_notification_sound_player()
         
         if not self.config.offline_model_path:
             raise AdapterError("offline_model_path must be configured for Vosk")
 
-    def _build_command_grammar(self) -> str:
+    @property
+    def command_grammar(self) -> str:
         command_phrases = [
             *resolve_recognition_phrases(self.config.speech_language),
             "[unk]",
@@ -56,9 +60,13 @@ class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface):
                 "point it to an existing en_us Vosk model directory as in project structure."
             )
 
+        set_vosk_log_level(-1)
+        ADAPTER_LOGGER.info("Loading Vosk model from '%s'.", model_path)
+        ADAPTER_LOGGER.info("Loaded Vosk grammar: %s", self.command_grammar)
+
         self.speech_model = Model(self.config.offline_model_path)
         self.speech_recognizer = KaldiRecognizer(
-            self.speech_model, self.sample_rate, self._build_command_grammar()
+            self.speech_model, self.sample_rate, self.command_grammar
         )
 
     def _record_audio(self) -> bytes:
@@ -108,11 +116,22 @@ class VoskSpeechAdapter(CustumizableAudioInputMixin, SpeechAdapterInterface):
             try:
                 recognized_text = json.loads(result_json).get("text", "")
                 ADAPTER_LOGGER.debug("Recognized command text: %s", recognized_text)
+
+                if not recognized_text:
+                    ADAPTER_LOGGER.info("speech_error: no_valid_text_recognized")
+                    self.notification_sound_player.play_speech_error()
+
                 return recognized_text
+
             except json.JSONDecodeError:
+                ADAPTER_LOGGER.warning("speech_error: invalid_vosk_result_json")
+                self.notification_sound_player.play_speech_error()
+
                 return ""
+
         except AdapterError:
             raise
+
         except Exception as err:
             raise AdapterError("Vosk adapter failure") from err
 

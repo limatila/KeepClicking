@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import logging
 
-from src.command_mapper.interfaces import CommandNormalizer, CommandParser, CommandValidator
 from src.core.config import AppConfig
 from src.core.errors import AdapterError, ApplicationError, NormalizationError
 from src.core.logging import CORE_LOGGER
+
+from src.command_mapper.interfaces import CommandNormalizer, CommandParser, CommandValidator
 from src.service.interfaces import Controller
 from src.speech.interfaces import SpeechAdapterInterface
+from src.utils.notifications import build_notification_sound_player
 
 
 class MouseApplicationRunner:
@@ -31,9 +33,10 @@ class MouseApplicationRunner:
         self.validator = validator
         self.controller = controller
         self.config = config
+        self.notification_sound_player = build_notification_sound_player()
         self.logger = logger
 
-    def listen_and_execute(self) -> None:
+    def listen_and_execute(self) -> str:
         while True:
             try:
                 text = self.adapter.next_text()
@@ -50,11 +53,13 @@ class MouseApplicationRunner:
                 parse_result = self.parser.parse(normalized)
                 if parse_result.error is not None:
                     self.logger.error(f"parse_error: {parse_result.error.reason}")
+                    self.notification_sound_player.play_parse_error()
                     continue
 
                 validation = self.validator.validate(parse_result.command)
                 if validation.error is not None:
                     self.logger.error(f"validation_error: {validation.error.reason}")
+                    self.notification_sound_player.play_parse_error()
                     continue
 
                 # Mouse Clicks
@@ -71,6 +76,7 @@ class MouseApplicationRunner:
 
             except (AdapterError, NormalizationError):
                 raise
+
             except ApplicationError as exc:
                 self.logger.error(f"application_error_in_runtime: {exc}")
                 continue
@@ -78,7 +84,16 @@ class MouseApplicationRunner:
     def run(self) -> None:
         try:
             self.logger.info("runner_started")
+            self.notification_sound_player.play_runner_started()
+            
             self.listen_and_execute()
+
+        except Exception:
+            self.notification_sound_player.play_application_error()
+            raise
+
         finally:
             self.adapter.close()
+
+            self.notification_sound_player.play_runner_finished()
             self.logger.info("runner_finished")
