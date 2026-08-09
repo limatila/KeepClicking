@@ -27,3 +27,17 @@ def test_build_script_variants_bundle_matching_vosk_models():
     assert 'VoskModelDir = "vosk-model-small-en-us-0.15"' in build_script
     assert 'Name = "KeepClicking-pt-br"' in build_script
     assert 'VoskModelDir = "vosk-model-small-pt-0.3"' in build_script
+
+
+def test_build_script_bundles_all_notification_sound_assets():
+    build_script = (PROJECT_ROOT / "scripts" / "build_exe.ps1").read_text(
+        encoding="utf-8"
+    )
+
+    assert '--add-data", "$AssetRoot\\notify.mp3;src/resources/assets"' in build_script
+    assert '--add-data", "$AssetRoot\\mouse-runner-start.mp3;src/resources/assets"' in build_script
+    assert '--add-data", "$AssetRoot\\finishing-loop.mp3;src/resources/assets"' in build_script
+    assert '--add-data", "$AssetRoot\\application-error.mp3;src/resources/assets"' in build_script
+    assert '--add-data", "$AssetRoot\\speech-error.mp3;src/resources/assets"' in build_script
+    assert '--add-data", "$AssetRoot\\parse-error.mp3;src/resources/assets"' in build_script
+    assert '--add-data", "$AssetRoot\\click.mp3;src/resources/assets"' in build_script
