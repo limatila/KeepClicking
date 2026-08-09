@@ -23,6 +23,9 @@ class PyAutoGuiMouseController(Controller):
 
     def click(self, times: int = 1, right_click: bool = False):
         button_side = "right" if right_click else "primary"
+
+        self.notification_sound_player.play_click()
+
         pag.click(clicks=times, interval=0.05, button=button_side)
 
     def scroll(self, command: MouseCommand):
@@ -79,13 +82,6 @@ class PyAutoGuiMouseController(Controller):
                 if not has_executed:
                     self.error = MouseExecutionError("Unsupported or invalid command")
                 else:
-                    if command.action in {
-                        MouseCommandAction.CLICK,
-                        MouseCommandAction.DOUBLE_CLICK,
-                        MouseCommandAction.RIGHT_CLICK,
-                    }:
-                        self.notification_sound_player.play_click()
-
                     CONTROLLER_LOGGER.debug("mouse_execute: %s", command.action)
             
             return MouseExecutionResult(stopped=self.stopped, error=self.error)
